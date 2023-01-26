@@ -42,5 +42,5 @@ jobs:
     - name: Download build
       uses: actions/upload-artifact@v3
       with:
-        name: build-${{RUNNER_OS}}-${{GITHUB_RUN_ID}}
+        name: build-ubuntu
         path: build/p4dc
