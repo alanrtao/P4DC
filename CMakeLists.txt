@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.15)
 # Project name, version and description
 project(p4dc VERSION 1.0 DESCRIPTION "P4DC bot by Alan Tao")
 
+find_package(ZLIB REQUIRED)
+
 # Add DPP as dependency
 add_subdirectory(libs/DPP)
 # You can also add any other libs you want to use
@@ -23,6 +25,7 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
     libs/DPP/include
     # Remember to add the include directories of any other libraries too
+    secrets
 )
  
 # Set C++ version
