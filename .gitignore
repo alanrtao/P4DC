@@ -2,3 +2,4 @@ libs/*
 !libs/clone.sh
 build
 env.h.in
+.vscode
