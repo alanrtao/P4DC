@@ -1,4 +1,4 @@
-libs
+libs/*
+!libs/clone.sh
 build
-.env
-secrets
+env.h.in

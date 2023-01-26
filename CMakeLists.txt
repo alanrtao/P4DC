@@ -1,35 +1,38 @@
 # minimum CMake version required
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.22)
 # Project name, version and description
-project(p4dc VERSION 1.0 DESCRIPTION "P4DC bot by Alan Tao")
+project(p4dc VERSION 0.1 DESCRIPTION "P4DC bot by Alan Tao")
 
-find_package(ZLIB REQUIRED)
-
-# Add DPP as dependency
 add_subdirectory(libs/DPP)
-# You can also add any other libs you want to use
+add_subdirectory(libs/SQLiteCpp)
+
+configure_file (env.h.in env.h @ONLY)
  
 # Create an executable
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    # your other files...
+    src/setting.cpp
 )
  
 # Linking libraries
 target_link_libraries(${PROJECT_NAME}
     dpp
-    # Add any other libs you want to use here
+    SQLiteCpp
+    sqlite3
+    pthread
+    dl
 )
  
 # Specify includes
 target_include_directories(${PROJECT_NAME} PRIVATE
     libs/DPP/include
-    # Remember to add the include directories of any other libraries too
+    "include"
     secrets
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
- 
+
 # Set C++ version
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
