@@ -11,7 +11,9 @@ configure_file (env.h.in env.h @ONLY)
 # Create an executable
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/api.cpp
+    src/api/create_role.cpp
+    src/api/integration_help.cpp
+    src/api/route_here.cpp
 )
  
 # Linking libraries
