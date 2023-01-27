@@ -1,7 +1,6 @@
 #include "api.h"
-
-bool examine_existing_webhook (dpp::cluster& bot, const dpp::webhook& wh, const dpp::channel& channel, bool channel_has_webhook);
-void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel);
+#include "all_api_calls.h"
+#include "utils.h"
 
 void api::calls::route_here_call (const dpp::slashcommand_t& event, dpp::cluster& bot) {
     const auto channel{event.command.get_channel()};
@@ -9,8 +8,8 @@ void api::calls::route_here_call (const dpp::slashcommand_t& event, dpp::cluster
 
     event.reply(
         ":anchor: P4DC routed to "+channel.name+"  \n"
-        "Make sure to run /"+api::create_role.route+" and /"+api::integration_help.route+" to create custom scripts for integrating Perforce triggers.\n"
-        ":point_right: I will send a message below if a webhook has been found / created...");
+        "**Creating webhook " + api::names::webhook + " for this channel**"
+        "You will receive a confirmation when the webhook is created.");
 
 
     bot.get_guild_webhooks(guild.id, [&bot, &channel](auto cb) {
@@ -20,8 +19,8 @@ void api::calls::route_here_call (const dpp::slashcommand_t& event, dpp::cluster
         } else {
             auto m{std::get<dpp::webhook_map>(cb.value)};
             bool channel_has_webhook = false;
-            for(const auto& [k, v] : m)
-                channel_has_webhook = examine_existing_webhook(bot, v, channel, channel_has_webhook);
+            for(const auto& [k, webhook] : m)
+                channel_has_webhook = examine_existing_webhook(bot, webhook, channel, channel_has_webhook);
             if (!channel_has_webhook)
                 do_create_webhook(bot, channel);
             else
