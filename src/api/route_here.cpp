@@ -1,7 +1,7 @@
 #include "api.h"
 
-bool examine_existing_webhook (dpp::cluster& bot, const dpp::webhook& wh, dpp::snowflake chan, bool channel_has_webhook);
-void do_create_webhook (dpp::cluster& bot, const dpp::snowflake chan);
+bool examine_existing_webhook (dpp::cluster& bot, const dpp::webhook& wh, const dpp::channel& channel, bool channel_has_webhook);
+void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel);
 
 void api::calls::route_here_call (const dpp::slashcommand_t& event, dpp::cluster& bot) {
     const auto channel{event.command.get_channel()};
@@ -13,20 +13,19 @@ void api::calls::route_here_call (const dpp::slashcommand_t& event, dpp::cluster
         ":point_right: I will send a message below if a webhook has been found / created...");
 
 
-    const auto chan{channel.id};
-    bot.get_guild_webhooks(guild.id, [&bot, &chan](auto cb) {
+    bot.get_guild_webhooks(guild.id, [&bot, &channel](auto cb) {
         if (cb.is_error()) {
             bot.log(dpp::loglevel::ll_error, "Could not read webhooks: " + cb.get_error().message);
-            bot.message_create(dpp::message(chan, ":exclamation: Could not read webhooks from channel."));
+            bot.message_create(dpp::message(channel.id, ":exclamation: Could not read webhooks from channel."));
         } else {
             auto m{std::get<dpp::webhook_map>(cb.value)};
             bool channel_has_webhook = false;
             for(const auto& [k, v] : m)
-                channel_has_webhook = examine_existing_webhook(bot, v, chan, channel_has_webhook);
+                channel_has_webhook = examine_existing_webhook(bot, v, channel, channel_has_webhook);
             if (!channel_has_webhook)
-                do_create_webhook(bot, chan);
+                do_create_webhook(bot, channel);
             else
-                bot.message_create(dpp::message(chan, "Webhook already exists on this channel."));
+                bot.message_create(dpp::message(channel.id, "Webhook already exists on this channel."));
         }
     });
 }
@@ -35,29 +34,30 @@ bool is_my_webhook(const dpp::cluster& bot, const dpp::webhook& wh) {
     return wh.name == api::names::webhook && wh.application_id == bot.me.id;
 }
 
-bool examine_existing_webhook (dpp::cluster& bot, const dpp::webhook& wh, dpp::snowflake chan, bool channel_has_webhook) {
+bool examine_existing_webhook (dpp::cluster& bot, const dpp::webhook& wh, const dpp::channel& channel, bool channel_has_webhook) {
     if (is_my_webhook(bot, wh)) {
-        if (wh.channel_id == chan && !channel_has_webhook) {
+        if (wh.channel_id == channel.id && !channel_has_webhook) {
             channel_has_webhook = true;
         }
         else {
-            bot.message_create(dpp::message(wh.channel_id, ":point_right: " + api::names::webhook + " no longer needed and has been removed."));
+            bot.message_create(dpp::message(channel.id, "... Previous webhook " + api::names::webhook + " in <#" + std::to_string(wh.channel_id) + "> removed."));
+            bot.message_create(dpp::message(wh.channel_id, ":luggage: " + api::names::webhook + " no longer needed and has been removed."));
             bot.delete_webhook(wh.id);
         }
     }
     return channel_has_webhook;
 }
 
-void do_create_webhook (dpp::cluster& bot, const dpp::snowflake chan) {
+void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel) {
     dpp::webhook new_hook{};
     new_hook.name = api::names::webhook;
     new_hook.application_id = bot.me.id;
-    new_hook.channel_id = chan;
+    new_hook.channel_id = channel.id;
 
-    bot.create_webhook(new_hook, [&bot, &chan](auto cb) {
+    bot.create_webhook(new_hook, [&bot, &channel](auto cb) {
         if (cb.is_error()) {
             bot.log(dpp::loglevel::ll_error, cb.get_error().message);
-            bot.message_create(dpp::message(chan, ":exclamation: Webhook " + api::names::webhook + " could not be created."));
+            bot.message_create(dpp::message(channel.id, ":exclamation: Webhook " + api::names::webhook + " could not be created."));
         } else {
             auto wh{std::get<dpp::webhook>(cb.value)};
             bot.message_create(dpp::message(wh.channel_id, ":link: Webhook " + api::names::webhook + " created."));
