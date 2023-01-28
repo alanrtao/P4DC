@@ -10,14 +10,18 @@
 
 const std::string db_file = "servers.db3";
 
+const uint64_t intent =
+    dpp::i_default_intents
+    | dpp::i_message_content;
+
 int main() {
-    dpp::cluster bot(BOT_TOKEN);
+    dpp::cluster bot(BOT_TOKEN, intent);
     bot.on_log(dpp::utility::cout_logger());
  
     // route incoming slash commands
     const std::vector<api::slash_command> slash_commands {
         api::route_here,
-        api::create_role,
+        // api::create_role,
         api::integration_help
     };
 
@@ -43,9 +47,16 @@ int main() {
 
     // message handlers
     const std::vector<api::msg_handler> msg_handlers {
+        api::pull_request
     };
 
-    bot.on_message_create([&bot](const dpp::message_create_t& event) {
+    bot.on_message_create([&bot, &msg_handlers](const dpp::message_create_t& event) {
+        for(const auto& handler : msg_handlers) {
+            if (handler.trigger(event)) {
+                handler.handle(event, bot);
+                break;
+            }
+        }
     });
  
     bot.start(dpp::st_wait);
