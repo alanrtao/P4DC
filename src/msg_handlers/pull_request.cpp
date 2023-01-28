@@ -43,8 +43,7 @@ void ping_reviewers(dpp::cluster& bot, const dpp::message_create_t& event, const
     bot.roles_get(event.msg.guild_id, [&bot, &event, &thread](const auto& cb) {
 
         const std::string reply_base = "Found `" + api::names::pull_request_mark + "` in commit, thread opened.";
-
-        std::cout<<event.msg.content<<std::endl;
+        
         if (cb.is_error()) {
             event.send("... could not read roles");
         } else {
