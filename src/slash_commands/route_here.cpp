@@ -67,7 +67,7 @@ void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel) {
             bot.message_create(dpp::message(channel.id, ":exclamation: Webhook `" + api::names::webhook + "` could not be created."));
         } else {
             auto wh{std::get<dpp::webhook>(cb.value)};
-            std::cout<<api::webhooks_root<<wh.id<<"/"<<wh.token<<std::endl;
+            // std::cout<<api::webhooks_root<<wh.id<<"/"<<wh.token<<std::endl;
             bot.message_create(dpp::message(wh.channel_id, ":link: Webhook `" + api::names::webhook + "` created."));
         }
     });
