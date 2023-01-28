@@ -11,4 +11,6 @@ bool is_my_webhook(const dpp::cluster& bot, const dpp::webhook& wh);
 bool examine_existing_webhook (dpp::cluster& bot, const dpp::webhook& wh, const dpp::channel& channel, bool channel_has_webhook);
 void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel);
 
+void do_integration_help(dpp::cluster& bot, const dpp::role& role, const dpp::webhook& webhook, const dpp::channel& channel);
+
 #endif
