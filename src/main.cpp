@@ -37,11 +37,21 @@ int main() {
     });
  
     // register slash commands
-    bot.on_ready([&bot, &slash_commands](const dpp::ready_t& event) {
+    std::vector<dpp::slashcommand> slash_commands_inst{};
+    for (const auto& scmd : slash_commands) {
+        dpp::slashcommand scmd_inst{
+            scmd.route,
+            scmd.description,
+            bot.me.id
+        };
+        for (const auto& opt : scmd.options) {
+            scmd_inst.add_option(opt);
+        }
+        slash_commands_inst.push_back(scmd_inst);
+    }
+    bot.on_ready([&bot, &slash_commands_inst](const dpp::ready_t& event) {
         if (dpp::run_once<struct register_bot_commands>()) {
-            for(const auto& cmd : slash_commands) {
-                dpp::slashcommand(cmd.route, cmd.description, bot.me.id);
-            }
+            bot.global_bulk_command_create(slash_commands_inst);
         }
     });
 

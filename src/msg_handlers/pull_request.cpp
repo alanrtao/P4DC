@@ -1,6 +1,6 @@
 #include "api.h"
 #include "slash_commands.h"
-#include "utils.h"
+#include "api_utils.h"
 #include "msg_handlers.h"
 
 bool api::msg_handler_calls::pull_request_trigger (const dpp::message_create_t& event) {

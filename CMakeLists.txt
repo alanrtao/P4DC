@@ -6,7 +6,7 @@ project(p4dc VERSION 0.1 DESCRIPTION "P4DC bot by Alan Tao")
 add_subdirectory(libs/DPP)
 # add_subdirectory(libs/SQLiteCpp)
 
-find_package(LibArchive)
+find_package(LibArchive REQUIRED)
 
 configure_file (env.h.in env.h @ONLY)
  
@@ -16,6 +16,7 @@ add_executable(${PROJECT_NAME}
     src/msg_handlers/pull_request.cpp
     src/slash_commands/integration_help.cpp
     src/slash_commands/route_here.cpp
+    src/utils/hydratable.cpp
 )
  
 # Linking libraries

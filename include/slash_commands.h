@@ -1,7 +1,9 @@
-#ifndef ALL_API_CALLS_H
-#define ALL_API_CALLS_H
+#ifndef SLASH_COMMANDS_H
+#define SLASH_COMMANDS_H
 
 #include "api.h"
+#include <vector>
+#include <dpp/dpp.h>
 
 namespace api {
     using slash_command_t = std::function<void(const dpp::slashcommand_t& event, dpp::cluster& bot)>;
@@ -17,20 +19,34 @@ namespace api {
         const std::string route;
         const std::string description;
         const api::slash_command_t call;
-        slash_command(const std::string& route, const std::string& description, const api::slash_command_t& call) : route{route}, description{description}, call{call} {}
+        const std::vector<dpp::command_option> options;
+        slash_command(
+            const std::string& route,
+            const std::string& description,
+            const api::slash_command_t& call,
+            const std::vector<dpp::command_option>& options
+            ) : route{route}, description{description}, call{call}, options{options} {}
     };
 
     const slash_command
-    route_here{
-        "route_here",
-        "Specify channel for the bot to post in.",
-        api::slash_command_calls::route_here_call
-    },
-    integration_help{
-        "integration_help",
-        "Download Perforce integration script for the current channel",
-        api::slash_command_calls::integration_help_call
-    };
+        route_here{
+            "route_here",
+            "Specify channel for the bot to post in.",
+            api::slash_command_calls::route_here_call,
+            {}
+        },
+        integration_help{
+            "integration_help",
+            "Download Perforce integration script for the current channel",
+            api::slash_command_calls::integration_help_call,
+            {
+                dpp::command_option(
+                    dpp::co_string,
+                    "depot", 
+                    "The name of the depot you want to integrate this channel to, omitting the \"// at the beginning.",
+                    true)
+            }
+        };
 }
 
 #endif
