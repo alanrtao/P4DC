@@ -5,6 +5,27 @@
 const std::string make_integration_instruction(const hydratable::context& context);
 const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context, const std::vector<hydratable>& files);
 
+hydratable
+    integration_instructions = hydratable::make_hydratable (
+        api::paths::instructions,
+        {
+            api::patterns::depot
+        }
+    ),
+    commit_trigger = hydratable::make_hydratable (
+        api::paths::commit_trigger,
+        {
+            api::patterns::webhook
+        }
+    ),
+    branch_trigger = hydratable::make_hydratable (
+        api::paths::branch_trigger,
+        {
+            api::patterns::webhook,
+            api::patterns::role
+        }
+    );
+
 void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t& event, dpp::cluster& bot) {
     const auto guild { event.command.get_guild() };
     const auto channel { event.command.get_channel() };
@@ -73,8 +94,8 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
 
 void do_integration_help(dpp::cluster& bot, const hydratable::context& context, const dpp::user& user) {
     const auto& [fname, fcontent] = make_integration_file(context, {
-        hydratables::commit_trigger,
-        hydratables::branch_trigger
+        commit_trigger,
+        branch_trigger
     });
 
     dpp::message reply {make_integration_instruction(context)};
