@@ -9,6 +9,8 @@ add_subdirectory(libs/DPP)
 find_package(LibArchive REQUIRED)
 
 configure_file (env.h.in env.h @ONLY)
+
+file (COPY res/templates DESTINATION .)
  
 # Create an executable
 add_executable(${PROJECT_NAME}

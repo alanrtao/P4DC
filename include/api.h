@@ -18,7 +18,7 @@ namespace api {
     namespace paths {
         const std::string
             hydratable_home = "./templates",
-            instructions = "instructions.txt",
+            instructions = "integration_instructions.txt",
             commit_trigger = "commit_trigger.sh",
             branch_trigger = "branch_trigger.sh";
     }
