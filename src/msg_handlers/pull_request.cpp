@@ -26,13 +26,12 @@ void api::msg_handler_calls::pull_request_call (const dpp::message_create_t& eve
     const uint16_t archive_duration = 1440;
 
     // pass event by value explicitly
-    bot.thread_create_with_message(name, channel_id, event.msg.id, archive_duration, 0, [&bot, event, guild_id](const auto& cb) {
+    bot.thread_create_with_message(name, channel_id, event.msg.id, archive_duration, 0, [&bot, event](const auto& cb) {
         if (cb.is_error()) {
             event.send("... thread could not be created");
-        } else {
-            const auto thread{std::get<dpp::thread>(cb.value)};
-            ping_reviewers(bot, event, thread);
+            return;
         }
+        ping_reviewers(bot, event, std::get<dpp::thread>(cb.value));
     });
 }
 
@@ -46,18 +45,18 @@ void ping_reviewers(dpp::cluster& bot, const dpp::message_create_t& event, const
         
         if (cb.is_error()) {
             event.send("... could not read roles");
-        } else {
-            const auto roles{std::get<dpp::role_map>(cb.value)};
-            for(const auto& [k, role] : roles) {
-                if (examine_existing_role(bot, role)) {
-                    // bot.message_create(dpp::message(thread.id, ":postbox: PR created <@&" + std::to_string(role.id) + ">"));
-                    event.reply(reply_base + " <@&" + std::to_string(role.id) + ">");
-                    return;
-                }
-            }
-
-            // no matching role
-            event.reply(reply_base + " No `" + api::names::role + "` found, you can run `/" + api::route_here.route + "` to create it.");
+            return;
         }
+
+        const auto roles{std::get<dpp::role_map>(cb.value)};
+        for(const auto& [k, role] : roles) {
+            if (is_my_role(bot, role)) {
+                event.reply(reply_base + " <@&" + std::to_string(role.id) + ">");
+                return;
+            }
+        }
+
+        // no matching role
+        event.reply(reply_base + " No `" + api::names::role + "` found, you can run `/" + api::route_here.route + "` to create it.");
     });
 }

@@ -26,11 +26,6 @@ namespace api {
         "Specify channel for the bot to post in.",
         api::slash_command_calls::route_here_call
     },
-    create_role{
-        "create_role",
-        "Create `" + api::names::role + "` role.",
-        api::slash_command_calls::create_role_call
-    },
     integration_help{
         "integration_help",
         "Download Perforce integration script for the current channel",
