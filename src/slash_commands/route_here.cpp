@@ -44,7 +44,7 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
         if (role_it == roles.end()) {
             do_create_role(bot, guild, channel, user);
         } else {
-            bot.message_create(dpp::message(channel.id, "The `" + api::names::role + "` role already exists on this server."));
+            bot.message_create(dpp::message(channel.id, ":point_right: The `" + api::names::role + "` role already exists on this server."));
         }
     });
 }

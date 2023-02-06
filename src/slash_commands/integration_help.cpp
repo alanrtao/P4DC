@@ -1,6 +1,8 @@
 #include "api.h"
 #include "slash_commands.h"
 #include "api_utils.h"
+#include <archive.h>
+#include <archive_entry.h>
 
 const std::string make_integration_instruction(const hydratable::context& context);
 const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context, const std::vector<hydratable>& files);
@@ -105,11 +107,58 @@ void do_integration_help(dpp::cluster& bot, const hydratable::context& context, 
 }
 
 const std::string make_integration_instruction(const hydratable::context& context) {
-    return "";
+    const std::string preemble =
+        "*This is a reply from your `" + api::integration_help.route + "` call"
+        " containing code generated for your depot `" + context.at(api::patterns::depot) + "`*.\n"
+        "Please **inspect** the code before running integration steps below, as P4DC does not guarantee them to be side-effect free.\n"
+        "Please also **notify** your server admin that you are running generated code on their server.\n"
+        "To install..."
+        "\n  1. Extract the compressed archive inside your depot and submit changes."
+        "  2. Run `p4 triggers`, a text editor should open showing a list of triggers currently configured in your server."
+        " Paste the following snippet into it and save. (If you are not a server admin, let your server admin complete this step)";
+    return preemble + "```" + integration_instructions.hydrate(context) + "```";
 }
 
 const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context, const std::vector<hydratable>& files) {
 
     const auto depot = context.at(api::patterns::depot);
-    return {depot, ""};
+    const std::string name { depot + ".p4dc-v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + ".tar.gz" };
+
+    std::unordered_map<std::string, std::string> hydrated_files {};
+
+    size_t buf_size = 0;
+    for (const auto& f : files) {
+        std::string content { f.hydrate(context) };
+        hydrated_files.insert({f.fname, content});
+        buf_size += content.length();
+    }
+    char *buf = new char[buf_size];
+
+    size_t buf_size_used = 0;
+
+    struct archive *a;
+    struct archive_entry *e;
+
+    a = archive_write_new();
+    archive_write_add_filter_gzip(a);
+    archive_write_set_format_pax_restricted(a);
+    archive_write_open_memory(a, buf, buf_size, &buf_size_used);
+    
+    for (const auto& [fname, content] : hydrated_files) {
+        e = archive_entry_new();
+        archive_entry_set_pathname(e, fname.c_str());
+        archive_entry_set_size(e, content.length());
+        archive_entry_set_filetype(e, AE_IFREG);
+        archive_entry_set_perm(e, 0755);
+        
+        archive_write_data(a, content.c_str(), content.length());
+        archive_entry_clear(e);
+    }
+    archive_entry_free(e);
+    archive_write_close(a);
+    archive_write_free(a);
+
+    delete[] buf;
+
+    return { name, "" };
 }
