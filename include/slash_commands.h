@@ -43,7 +43,7 @@ namespace api {
                 dpp::command_option(
                     dpp::co_string,
                     "depot", 
-                    "The name of the depot you want to integrate this channel to, omitting the \"// at the beginning.",
+                    "The name of the depot you want to integrate this channel to. Please omit any slashes in the beginning and end of the depot path.",
                     true)
             }
         };

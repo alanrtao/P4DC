@@ -9,6 +9,11 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
     const auto guild { event.command.get_guild() };
     const auto user { event.command.get_issuing_user() };
 
+    if (!is_admin(bot, event)) {
+        event.reply(":exclamation: Sensitive webhook information disclosed, only server admins can run this command.");
+        return;
+    }
+
     event.reply(
         ":anchor: P4DC routed to "+channel.name+"  \n"
         "**... creating webhook `" + api::names::webhook + "` for this channel**\n"

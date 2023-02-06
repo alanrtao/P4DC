@@ -12,7 +12,11 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
     const auto channel { event.command.get_channel() };
     const auto user { event.command.get_issuing_user() };
 
-    // TODO: permission check
+    if (!is_admin(bot, event)) {
+        event.reply(":exclamation: Only server admins can run this command.");
+        return;
+    }
+
     std::string depot = "";
     try {
         depot = std::get<std::string>(event.get_parameter("depot"));
@@ -125,7 +129,7 @@ const std::pair<std::string, std::string> make_integration_file(const hydratable
     };
 
     const auto depot = context.at(api::patterns::depot);
-    const std::string name { depot + ".p4dc-v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + ".tar.gz" };
+    const std::string name { depot + "-p4dc-v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + ".tar.gz" };
 
     std::unordered_map<std::string, std::string> hydrated_files {};
 
