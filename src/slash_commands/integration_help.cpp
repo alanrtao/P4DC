@@ -5,28 +5,7 @@
 #include <archive_entry.h>
 
 const std::string make_integration_instruction(const hydratable::context& context);
-const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context, const std::vector<hydratable>& files);
-
-hydratable
-    integration_instructions = hydratable::make_hydratable (
-        api::paths::instructions,
-        {
-            api::patterns::depot
-        }
-    ),
-    commit_trigger = hydratable::make_hydratable (
-        api::paths::commit_trigger,
-        {
-            api::patterns::webhook
-        }
-    ),
-    branch_trigger = hydratable::make_hydratable (
-        api::paths::branch_trigger,
-        {
-            api::patterns::webhook,
-            api::patterns::role
-        }
-    );
+const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context);
 
 void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t& event, dpp::cluster& bot) {
     const auto guild { event.command.get_guild() };
@@ -95,10 +74,7 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
 }
 
 void do_integration_help(dpp::cluster& bot, const hydratable::context& context, const dpp::user& user) {
-    const auto& [fname, fcontent] = make_integration_file(context, {
-        commit_trigger,
-        branch_trigger
-    });
+    const auto& [fname, fcontent] = make_integration_file(context);
 
     dpp::message reply {make_integration_instruction(context)};
     reply.add_file(fname, fcontent);
@@ -107,6 +83,14 @@ void do_integration_help(dpp::cluster& bot, const hydratable::context& context, 
 }
 
 const std::string make_integration_instruction(const hydratable::context& context) {
+
+    static hydratable integration_instructions = hydratable::make_hydratable (
+        api::paths::instructions,
+        {
+            api::patterns::depot
+        }
+    );
+
     const std::string preemble =
         "*This is a reply from your `" + api::integration_help.route + "` call"
         " containing code generated for your depot `" + context.at(api::patterns::depot) + "`*.\n"
@@ -119,7 +103,26 @@ const std::string make_integration_instruction(const hydratable::context& contex
     return preemble + "```" + integration_instructions.hydrate(context) + "```";
 }
 
-const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context, const std::vector<hydratable>& files) {
+const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context) {
+
+    static hydratable
+    commit_trigger = hydratable::make_hydratable (
+        api::paths::commit_trigger,
+        {
+            api::patterns::webhook
+        }
+    ),
+    branch_trigger = hydratable::make_hydratable (
+        api::paths::branch_trigger,
+        {
+            api::patterns::webhook,
+            api::patterns::role
+        }
+    );
+    static std::vector<hydratable> files { 
+        commit_trigger,
+        branch_trigger
+    };
 
     const auto depot = context.at(api::patterns::depot);
     const std::string name { depot + ".p4dc-v" + std::to_string(VERSION_MAJOR) + "." + std::to_string(VERSION_MINOR) + ".tar.gz" };
@@ -140,16 +143,18 @@ const std::pair<std::string, std::string> make_integration_file(const hydratable
     struct archive_entry *e;
 
     a = archive_write_new();
+    e = archive_entry_new();
+
     archive_write_add_filter_gzip(a);
     archive_write_set_format_pax_restricted(a);
     archive_write_open_memory(a, buf, buf_size, &buf_size_used);
     
     for (const auto& [fname, content] : hydrated_files) {
-        e = archive_entry_new();
         archive_entry_set_pathname(e, fname.c_str());
         archive_entry_set_size(e, content.length());
         archive_entry_set_filetype(e, AE_IFREG);
         archive_entry_set_perm(e, 0755);
+        archive_write_header(a, e);
         
         archive_write_data(a, content.c_str(), content.length());
         archive_entry_clear(e);
@@ -158,7 +163,9 @@ const std::pair<std::string, std::string> make_integration_file(const hydratable
     archive_write_close(a);
     archive_write_free(a);
 
+    std::string out { buf, buf + buf_size_used };
+
     delete[] buf;
 
-    return { name, "" };
+    return { name, out };
 }

@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
     src/slash_commands/integration_help.cpp
     src/slash_commands/route_here.cpp
     src/utils/hydratable.cpp
+    src/utils/api_utils.cpp
 )
  
 # Linking libraries
