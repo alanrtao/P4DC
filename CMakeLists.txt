@@ -3,9 +3,8 @@ cmake_minimum_required(VERSION 3.22)
 # Project name, version and description
 project(p4dc VERSION 0.1 DESCRIPTION "P4DC bot by Alan Tao")
 
-add_subdirectory(libs/DPP)
+# add_subdirectory(libs/DPP)
 # add_subdirectory(libs/SQLiteCpp)
-
 find_package(LibArchive REQUIRED)
 
 configure_file (env.h.in env.h @ONLY)
@@ -24,8 +23,8 @@ add_executable(${PROJECT_NAME}
  
 # Linking libraries
 target_link_libraries(${PROJECT_NAME}
-    dpp
     LibArchive::LibArchive
+    "${CMAKE_CURRENT_LIST_DIR}/libs/DPP/lib/libdpp.so"
 #    SQLiteCpp
 #    sqlite3
 #    pthread
@@ -34,8 +33,8 @@ target_link_libraries(${PROJECT_NAME}
  
 # Specify includes
 target_include_directories(${PROJECT_NAME} PRIVATE
-    libs/DPP/include
-    "include"
+    "${CMAKE_CURRENT_LIST_DIR}/libs/DPP/include"
+    "${CMAKE_CURRENT_LIST_DIR}/include"
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
