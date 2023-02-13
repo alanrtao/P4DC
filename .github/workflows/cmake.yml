@@ -64,7 +64,6 @@ jobs:
     - name: delete prior
       continue-on-error: true
       run: pm2 delete p4dc
-    - name: 
     - name: run
       run: chmod +755 -R ${{github.workspace}}/out && pm2 start ${{github.workspace}}/out/bin/p4dc --name p4dc
     - name: save
