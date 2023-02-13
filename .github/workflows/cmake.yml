@@ -17,7 +17,8 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: self-hosted
-    HOME: /root
+    env:
+      HOME: /root
     steps:
     - uses: actions/checkout@v3
     
@@ -50,7 +51,7 @@ jobs:
 
     - name: run
       run: chmod +755 -R ${{github.workspace}}/out && pm2 start ${{github.workspace}}/out/bin/p4dc --name p4dc
-      
+
     - name: save
       run: pm2 save
       
