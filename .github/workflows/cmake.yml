@@ -24,10 +24,10 @@ jobs:
     - name: Installation
       working-directory: ${{github.workspace}}/libs
       run: sudo ./clone.sh
-      
+
     - name: Secrets
       run: |
-        cp env.h.template env.h.in && sed -i 's/your bot\'s token/${{ secrets.BOT_TOKEN }}/g' env.h.in
+        sed "s/your bot's token/${{ secrets.BOT_TOKEN }}/g" env.h.template > env.h.in
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
