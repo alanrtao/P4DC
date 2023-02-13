@@ -22,8 +22,6 @@ add_executable(${PROJECT_NAME}
     src/utils/hydratable.cpp
     src/utils/api_utils.cpp
 )
-
-set(BUILD_VOICE_SUPPORT OFF)
  
 # Linking libraries
 target_link_libraries(${PROJECT_NAME}
