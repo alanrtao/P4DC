@@ -50,7 +50,8 @@ jobs:
       run: pm2 delete p4dc
 
     - name: run
-      run: chmod +755 -R ${{github.workspace}}/build/p4dc && pm2 start ${{github.workspace}}/build/p4dc --name p4dc
+      working-directory: ${{github.workspace}}/build
+      run: chmod +755 -R p4dc && pm2 start ./p4dc --name p4dc
 
     - name: save
       run: pm2 save
