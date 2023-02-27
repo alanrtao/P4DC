@@ -1,6 +1,7 @@
 #include "api.h"
 #include "slash_commands.h"
 #include "api_utils.h"
+#include "db_utils.h"
 #include <archive.h>
 #include <archive_entry.h>
 
@@ -31,50 +32,40 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
 
     event.reply("Generating integration code, please wait...");
 
-    bot.roles_get(guild.id, [&bot, channel, guild, user, depot, &db](const auto& cb) {
+    auto role_result = db::get_role(db, std::to_string(guild.id));
+    if (role_result.is_error) {
+        bot.message_create(
+            dpp::message(
+                channel.id,
+                ":exclamation: Please run `" + api::route_here.route + "` first to create the `" + api::names::role + "` role."));
+        return;
+    } else {
+        bot.message_create(
+            dpp::message(
+                channel.id,
+                "... proceeding with role <@&" + role_result.get_result() + ">"));
+    }
 
-        if (cb.is_error()) {
-            bot.message_create(dpp::message(channel.id, ":exclamation: Could not read roles in this server."));
-            return;
-        }
+    auto webhook_result = db::get_webhook(db, std::to_string(channel.id));
+    if (webhook_result.is_error) {
+        bot.message_create(
+            dpp::message(
+                channel.id,
+                ":exclamation: Please run `" + api::route_here.route + "` first to create the `" + api::names::webhook + "`webhook"));
+    } else {
+        bot.message_create(
+            dpp::message(
+                channel.id,
+                "... proceeding with webhook `" + webhook_result.get_result() + "`"));
+    }
 
-        const auto roles { std::get<dpp::role_map>(cb.value) };
-        const auto role_it = find_my_role(bot, channel, roles);
-        if (role_it == roles.end()) {
-            bot.message_create(dpp::message(channel.id, ":exclamation: Please run `" + api::route_here.route + "` first to create `" + api::names::role + "` role."));
-            return;
-        }
-
-        bot.message_create(dpp::message(channel.id, "... proceeding with role <@&" + std::to_string(role_it->first) + ">"));
-        bot.get_channel_webhooks(channel.id, [&bot, channel, role = role_it->second, user, depot, &db](const auto& cb) {\
-
-            if (cb.is_error()) {
-                bot.log(dpp::loglevel::ll_error, "Could not read webhooks: " + cb.get_error().message);
-                bot.message_create(dpp::message(channel.id, ":exclamation: Could not read webhooks from channel."));
-                return;
-            }
-
-            const auto webhooks { std::get<dpp::webhook_map>(cb.value) };
-            const auto webhook_it = find_my_webhook(bot, channel, webhooks);
-
-            if (webhook_it == webhooks.end()) {
-                bot.message_create(dpp::message(channel.id, ":exclamation: Please run `" + api::route_here.route + "` first to create `" + api::names::webhook + "` webhook."));
-                return;
-            }
-
-            const auto webhook { webhook_it->second };
-
-            bot.message_create(dpp::message(channel.id, "... proceeding with webhook `" + api::names::webhook + "`"));
-
-            do_integration_help(
-                bot, hydratable::context {
-                    { api::patterns::role, std::to_string(role.id) },
-                    { api::patterns::webhook, api::webhooks_root + std::to_string(webhook.id) + "/" + webhook.token },
-                    { api::patterns::depot, depot }
-                },
-                user);
-        });
-    });
+    do_integration_help(
+        bot, hydratable::context {
+            { api::patterns::role, role_result.get_result() },
+            { api::patterns::webhook, webhook_result.get_result() },
+            { api::patterns::depot, depot }
+        },
+        user);
 }
 
 void do_integration_help(dpp::cluster& bot, const hydratable::context& context, const dpp::user& user) {

@@ -22,7 +22,8 @@ int main() {
     bot.on_log(dpp::utility::cout_logger());
 
     SQLite::Database db(db_file, SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE );
-    make_table(db);
+    db::make_webhooks_table(db);
+    db::make_roles_table(db);
  
     // route incoming slash commands
     const std::vector<api::slash_command> slash_commands {

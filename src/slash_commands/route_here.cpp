@@ -28,7 +28,7 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
         }
 
         auto webhooks{ std::get<dpp::webhook_map>(cb.value) };
-        const auto webhook_it = find_my_webhook(bot, channel, webhooks);
+        const auto webhook_it = find_my_webhook(bot, channel, webhooks, db);
         if (webhook_it == webhooks.end()) {
             do_create_webhook(bot, channel, db);
         } else {
@@ -37,7 +37,7 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
     });
 
     // role
-    bot.roles_get(guild.id, [&bot, guild, channel, user](const auto& cb){
+    bot.roles_get(guild.id, [&bot, guild, channel, user, &db](const auto& cb){
 
         if (cb.is_error()) {
             bot.log(dpp::loglevel::ll_error, "Could not read roles: " + cb.get_error().message);
@@ -46,9 +46,9 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
         }
 
         auto roles{ std::get<dpp::role_map>(cb.value) };
-        const auto role_it = find_my_role(bot, channel, roles);
+        const auto role_it = find_my_role(bot, channel, roles, db);
         if (role_it == roles.end()) {
-            do_create_role(bot, guild, channel, user);
+            do_create_role(bot, guild, channel, user, db);
         } else {
             bot.message_create(dpp::message(channel.id, ":point_right: The `" + api::names::role + "` role already exists on this server."));
         }
@@ -59,7 +59,7 @@ bool is_my_webhook(const dpp::cluster& bot, const dpp::webhook& wh) {
     return wh.name == api::names::webhook; // && wh.application_id == bot.me.id;
 }
 
-const dpp::webhook_map::const_iterator find_my_webhook(dpp::cluster& bot, const dpp::channel& channel, const dpp::webhook_map& map) {
+const dpp::webhook_map::const_iterator find_my_webhook(dpp::cluster& bot, const dpp::channel& channel, const dpp::webhook_map& map, SQLite::Database& db) {
     bool channel_has_webhook {};
     auto find = map.end();
     for (auto i = map.begin(); i != map.end(); ++i) {
@@ -67,6 +67,7 @@ const dpp::webhook_map::const_iterator find_my_webhook(dpp::cluster& bot, const 
             if (channel_has_webhook) {
                 bot.message_create(dpp::message(channel.id, ":point_right: Delete duplicate webhook"));
                 bot.delete_webhook(i->second.id);
+                db::delete_webhook(db, std::to_string(channel.id));
             } else {
                 find = i;
                 channel_has_webhook = true;
@@ -95,7 +96,7 @@ void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel, SQLite::
             // std::cout<<api::webhooks_root<<wh.id<<"/"<<wh.token<<std::endl;
             bot.message_create(dpp::message(wh.channel_id, ":link: Webhook `" + api::names::webhook + "` created."));
             try {
-                upsert_row(db, std::to_string(wh.channel_id), api::webhooks_root+std::to_string(wh.id)+"/"+wh.token);
+                db::upsert_webhook(db, std::to_string(wh.channel_id), api::webhooks_root+std::to_string(wh.id)+"/"+wh.token);
             } catch (std::exception& e) {
                 bot.log(dpp::ll_error, e.what());
             }
@@ -107,7 +108,7 @@ bool is_my_role(dpp::cluster& bot, const dpp::role& r) {
     return r.name == api::names::role;
 }
 
-bool is_my_role(dpp::cluster& bot, const dpp::role& r, const dpp::channel& channel) {
+bool is_my_role(dpp::cluster& bot, const dpp::role& r, const dpp::channel& channel, SQLite::Database& db) {
     if (is_my_role(bot, r)) {
         if (r.is_mentionable() || r.bot_id != 0) {
             return true;
@@ -116,16 +117,17 @@ bool is_my_role(dpp::cluster& bot, const dpp::role& r, const dpp::channel& chann
                 "Deleting invalid role `" + r.name + "`: not mentionable / is a bot webhook "
                 "(P4DC needs to read webhook message content, while Discord forbids bots from reading bot webhook contents)."));
             bot.role_delete(r.guild_id, r.id);
+            db::delete_role(db, std::to_string(r.guild_id));
         }
     }
     return false;
 }
 
-const dpp::role_map::const_iterator find_my_role(dpp::cluster& bot, const dpp::channel& channel, const dpp::role_map& map) {
+const dpp::role_map::const_iterator find_my_role(dpp::cluster& bot, const dpp::channel& channel, const dpp::role_map& map, SQLite::Database& db) {
     bool guild_has_role {};
     auto find = map.end();
     for (auto i = map.begin(); i != map.end(); ++i) {
-        if (is_my_role(bot, i->second, channel)) {
+        if (is_my_role(bot, i->second, channel, db)) {
             if (guild_has_role) {
                 bot.message_create(dpp::message(channel.id, ":point_right: Delete duplicate role"));
                 bot.role_delete(i->second.guild_id, i->second.id);
@@ -146,13 +148,14 @@ dpp::role make_role (const dpp::guild& guild) {
     return new_role;
 }
 
-void do_create_role (dpp::cluster& bot, const dpp::guild& guild, const dpp::channel& channel, const dpp::user& user) {
-    bot.role_create(make_role(guild), [&bot, &guild, &channel, &user](const auto& cb) {
+void do_create_role (dpp::cluster& bot, const dpp::guild& guild, const dpp::channel& channel, const dpp::user& user, SQLite::Database& db) {
+    bot.role_create(make_role(guild), [&bot, &guild, &channel, &user, &db](const auto& cb) {
         if (cb.is_error()) {
             bot.log(dpp::loglevel::ll_error, cb.get_error().message);
             bot.message_create(dpp::message(channel.id, ":exclamation: Role `" + api::names::role + "` could not be created."));
         } else {
-            auto role{std::get<dpp::role>(cb.value)};
+            dpp::role role{std::get<dpp::role>(cb.value)};
+            db::upsert_role(db, std::to_string(role.guild_id), std::to_string(role.id));
 
             bot.guild_member_add_role(guild.id, user.id, role.id, [&bot, channel, role, user](const auto& cb) {
                 if (cb.is_error()) {
