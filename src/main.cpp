@@ -1,4 +1,5 @@
 #include <dpp/dpp.h>
+#include <SQLiteCpp/SQLiteCpp.h>
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
@@ -7,6 +8,8 @@
 #include "slash_commands.h"
 
 #include "env.h"
+
+#include "db_utils.h"
 
 const std::string db_file = "servers.db3";
 
@@ -17,6 +20,9 @@ const uint64_t intent =
 int main() {
     dpp::cluster bot(BOT_TOKEN, intent);
     bot.on_log(dpp::utility::cout_logger());
+
+    SQLite::Database db(db_file, SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE );
+    make_table(db);
  
     // route incoming slash commands
     const std::vector<api::slash_command> slash_commands {
@@ -28,11 +34,11 @@ int main() {
     std::unordered_map<std::string, api::slash_command> sc_map{};
     for(const auto& sc : slash_commands) sc_map.insert({ sc.route, sc });
 
-    bot.on_slashcommand([&bot, &sc_map](const dpp::slashcommand_t& event) {
+    bot.on_slashcommand([&bot, &sc_map, &db](const dpp::slashcommand_t& event) {
         const auto cmd{event.command.get_command_name()};
         if (const auto& query{sc_map.find(cmd)}; query != sc_map.end()) {
             const auto [name, command] = *query;
-            command.call(event, bot);
+            command.call(event, bot, db);
         }
     });
  

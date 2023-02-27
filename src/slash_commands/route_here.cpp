@@ -1,10 +1,11 @@
 #include "api.h"
 #include "slash_commands.h"
 #include "api_utils.h"
+#include "db_utils.h"
 
 // note: application_id no longer set. bot only reacts to non-bot messages
 
-void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event, dpp::cluster& bot) {
+void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db) {
     const auto channel { event.command.get_channel() };
     const auto guild { event.command.get_guild() };
     const auto user { event.command.get_issuing_user() };
@@ -20,7 +21,7 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
         "**... creating role `" + api::names::role + "` for this channel**\n"
         "... if you do not receive confirmations for both, run this command again.");
 
-    bot.get_channel_webhooks(channel.id, [&bot, channel](const auto& cb) {
+    bot.get_channel_webhooks(channel.id, [&bot, channel, &db](const auto& cb) {
         if (cb.is_error()) {
             bot.message_create(dpp::message(channel.id, ":exclamation: Could not read webhooks from channel."));
             return;
@@ -29,7 +30,7 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
         auto webhooks{ std::get<dpp::webhook_map>(cb.value) };
         const auto webhook_it = find_my_webhook(bot, channel, webhooks);
         if (webhook_it == webhooks.end()) {
-            do_create_webhook(bot, channel);
+            do_create_webhook(bot, channel, db);
         } else {
             bot.message_create(dpp::message(channel.id, ":point_right: Webhook `" + api::names::webhook + "` already exists on this channel."));
         }
@@ -84,8 +85,8 @@ dpp::webhook make_hook(const dpp::cluster& bot, const dpp::channel& channel) {
     return new_hook;
 }
 
-void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel) {
-    bot.create_webhook(make_hook(bot, channel), [&bot, channel](const auto& cb) {
+void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel, SQLite::Database& db) {
+    bot.create_webhook(make_hook(bot, channel), [&bot, channel, &db](const auto& cb) {
         if (cb.is_error()) {
             bot.log(dpp::loglevel::ll_error, cb.get_error().message);
             bot.message_create(dpp::message(channel.id, ":exclamation: Webhook `" + api::names::webhook + "` could not be created."));
@@ -93,6 +94,11 @@ void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel) {
             auto wh{std::get<dpp::webhook>(cb.value)};
             // std::cout<<api::webhooks_root<<wh.id<<"/"<<wh.token<<std::endl;
             bot.message_create(dpp::message(wh.channel_id, ":link: Webhook `" + api::names::webhook + "` created."));
+            try {
+                upsert_row(db, std::to_string(wh.channel_id), api::webhooks_root+std::to_string(wh.id)+"/"+wh.token);
+            } catch (std::exception& e) {
+                bot.log(dpp::ll_error, e.what());
+            }
         }
     });
 }

@@ -7,7 +7,7 @@
 const std::string make_integration_instruction(const hydratable::context& context);
 const std::pair<std::string, std::string> make_integration_file(const hydratable::context& context);
 
-void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t& event, dpp::cluster& bot) {
+void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db) {
     const auto guild { event.command.get_guild() };
     const auto channel { event.command.get_channel() };
     const auto user { event.command.get_issuing_user() };
@@ -31,7 +31,7 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
 
     event.reply("Generating integration code, please wait...");
 
-    bot.roles_get(guild.id, [&bot, channel, guild, user, depot](const auto& cb) {
+    bot.roles_get(guild.id, [&bot, channel, guild, user, depot, &db](const auto& cb) {
 
         if (cb.is_error()) {
             bot.message_create(dpp::message(channel.id, ":exclamation: Could not read roles in this server."));
@@ -46,7 +46,7 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
         }
 
         bot.message_create(dpp::message(channel.id, "... proceeding with role <@&" + std::to_string(role_it->first) + ">"));
-        bot.get_channel_webhooks(channel.id, [&bot, channel, role = role_it->second, user, depot](const auto& cb) {\
+        bot.get_channel_webhooks(channel.id, [&bot, channel, role = role_it->second, user, depot, &db](const auto& cb) {\
 
             if (cb.is_error()) {
                 bot.log(dpp::loglevel::ll_error, "Could not read webhooks: " + cb.get_error().message);
