@@ -10,7 +10,7 @@ void db::make_roles_table (SQLite::Database &db) {
             "    role BLOB NOT NULL\n"
             ");\n"
         );
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         std::cout<<e.what()<<std::endl;
     }
     
@@ -22,7 +22,7 @@ void db::upsert_role (SQLite::Database& db, std::string id, std::string role) {
             "INSERT INTO roles(id, role) VALUES ('"+id+"', '"+role+"')\n"
             "  ON CONFLICT(id) DO UPDATE SET role='"+role+"';\n"
         );
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         std::cout<<e.what()<<std::endl;
     }
     
@@ -34,7 +34,7 @@ void db::delete_role (SQLite::Database &db, std::string id)
         db.exec (
             "DELETE FROM roles WHERE id='"+id+"';\n"  
         );
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         std::cout<<e.what()<<std::endl;
     }
 }
@@ -46,8 +46,8 @@ db::result db::get_role (SQLite::Database &db, std::string id) {
             std::string role = query.getColumn(1);
             return { role };
         }
-    } catch (std::exception& e) {
-        return {};
+    } catch (const std::exception& e) {
+        return { };
     }
 }
 
@@ -59,7 +59,7 @@ void db::make_webhooks_table (SQLite::Database &db) {
             "    url TEXT NOT NULL\n"
             ");\n"
         );
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         std::cout<<e.what()<<std::endl;
     }
 }
@@ -70,7 +70,7 @@ void db::upsert_webhook (SQLite::Database& db, std::string id, std::string url) 
             "INSERT INTO webhooks(id, url) VALUES ('"+id+"', '"+url+"')\n"
             "  ON CONFLICT(id) DO UPDATE SET url='"+url+"';\n"
         );
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         std::cout<<e.what()<<std::endl;
     }
 }
@@ -81,7 +81,7 @@ void db::delete_webhook (SQLite::Database &db, std::string id)
         db.exec (
             "DELETE FROM webhooks WHERE id='"+id+"';\n"
         );
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         std::cout<<e.what()<<std::endl;
     }
 }
@@ -93,7 +93,7 @@ db::result db::get_webhook (SQLite::Database &db, std::string id) {
             std::string url = query.getColumn(1);
             return { url };
         }
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         return {};
     }
 }
