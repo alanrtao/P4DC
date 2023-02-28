@@ -1,27 +1,42 @@
 #include "db_utils.h"
 #include <exception>
+#include <iostream>
 
 void db::make_roles_table (SQLite::Database &db) {
-    db.exec (
-        "CREATE TABLE IF NOT EXISTS roles (\n"
-        "    id BLOB NOT NULL PRIMARY KEY,\n"
-        "    role BLOB NOT NULL,\n"
-        ");\n"
-    );
+    try {
+        db.exec (
+            "CREATE TABLE IF NOT EXISTS roles (\n"
+            "    id BLOB NOT NULL PRIMARY KEY,\n"
+            "    role BLOB NOT NULL\n"
+            ");\n"
+        );
+    } catch (std::exception& e) {
+        std::cout<<e.what()<<std::endl;
+    }
+    
 }
 
 void db::upsert_role (SQLite::Database& db, std::string id, std::string role) {
-    db.exec (
-        "INSERT INTO roles(id, role) VALUES ('"+id+"', '"+role+"')\n"
-        "  ON CONFLICT(id) DO UPDATE SET role='"+role+"';\n"
-    );
+    try {
+        db.exec (
+            "INSERT INTO roles(id, role) VALUES ('"+id+"', '"+role+"')\n"
+            "  ON CONFLICT(id) DO UPDATE SET role='"+role+"';\n"
+        );
+    } catch (std::exception& e) {
+        std::cout<<e.what()<<std::endl;
+    }
+    
 }
 
 void db::delete_role (SQLite::Database &db, std::string id)
 {
-    db.exec (
-        "DELETE FROM roles WHERE id='"+id+"';\n"  
-    );
+    try {
+        db.exec (
+            "DELETE FROM roles WHERE id='"+id+"';\n"  
+        );
+    } catch (std::exception& e) {
+        std::cout<<e.what()<<std::endl;
+    }
 }
 
 db::result db::get_role (SQLite::Database &db, std::string id) {
@@ -37,26 +52,38 @@ db::result db::get_role (SQLite::Database &db, std::string id) {
 }
 
 void db::make_webhooks_table (SQLite::Database &db) {
-    db.exec (
-        "CREATE TABLE IF NOT EXISTS webhooks (\n"
-        "    id BLOB NOT NULL PRIMARY KEY,\n"
-        "    url TEXT NOT NULL,\n"
-        ");\n"
-    );
+    try {
+        db.exec (
+            "CREATE TABLE IF NOT EXISTS webhooks (\n"
+            "    id BLOB NOT NULL PRIMARY KEY,\n"
+            "    url TEXT NOT NULL\n"
+            ");\n"
+        );
+    } catch (std::exception& e) {
+        std::cout<<e.what()<<std::endl;
+    }
 }
 
 void db::upsert_webhook (SQLite::Database& db, std::string id, std::string url) {
-    db.exec (
-        "INSERT INTO webhooks(id, url) VALUES ('"+id+"', '"+url+"')\n"
-        "  ON CONFLICT(id) DO UPDATE SET url='"+url+"';\n"
-    );
+    try {
+        db.exec (
+            "INSERT INTO webhooks(id, url) VALUES ('"+id+"', '"+url+"')\n"
+            "  ON CONFLICT(id) DO UPDATE SET url='"+url+"';\n"
+        );
+    } catch (std::exception& e) {
+        std::cout<<e.what()<<std::endl;
+    }
 }
 
 void db::delete_webhook (SQLite::Database &db, std::string id)
 {
-    db.exec (
-        "DELETE FROM webhooks WHERE id='"+id+"';\n"
-    );
+    try {
+        db.exec (
+            "DELETE FROM webhooks WHERE id='"+id+"';\n"
+        );
+    } catch (std::exception& e) {
+        std::cout<<e.what()<<std::endl;
+    }
 }
 
 db::result db::get_webhook (SQLite::Database &db, std::string id) {

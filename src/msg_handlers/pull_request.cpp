@@ -1,6 +1,7 @@
 #include "api.h"
 #include "slash_commands.h"
 #include "api_utils.h"
+#include "db_utils.h"
 #include "msg_handlers.h"
 
 bool api::msg_handler_calls::pull_request_trigger (const dpp::message_create_t& event) {
@@ -11,40 +12,38 @@ bool api::msg_handler_calls::pull_request_trigger (const dpp::message_create_t& 
 
 std::string get_pr_name (const std::string& msg_content);
 
-void api::msg_handler_calls::pull_request_call (const dpp::message_create_t& event, dpp::cluster& bot) {
+void api::msg_handler_calls::pull_request_call (const dpp::message_create_t& event, dpp::cluster& bot, SQLite::Database& db) {
     const auto channel_id { event.msg.channel_id };
     const auto guild_id { event.msg.guild_id };
 
     const auto name { get_pr_name(event.msg.content) };
     const uint16_t archive_duration = 1440;
 
-    bot.thread_create_with_message(name, channel_id, event.msg.id, archive_duration, 0, [&bot, event](const auto& cb) {
+    bot.thread_create_with_message(name, channel_id, event.msg.id, archive_duration, 0, [&bot, event, &db](const auto& cb) {
         if (cb.is_error()) {
             event.reply("... thread could not be created");
             return;
         }
 
         auto thread = std::get<dpp::thread>(cb.value);
-        bot.roles_get(event.msg.guild_id, [&bot, event, thread](const auto& cb) {
 
-            const std::string reply_base = "Found `" + api::names::pull_request_mark + "` in commit, thread opened.";
-            
-            if (cb.is_error()) {
-                event.send("... could not read roles");
-                return;
-            }
+        const std::string reply_base = "Found `" + api::names::pull_request_mark + "` in commit, thread opened.";
+        
+        auto role_result = db::get_role(db, std::to_string(event.msg.guild_id));
+        auto webhook_result = db::get_webhook(db, std::to_string(event.msg.channel_id));
+        
+        if (webhook_result.is_error) {
+            event.reply(reply_base + " No `" + api::names::webhook + "` webhook found, you can run `/" + api::route_here.route + "` to create it.");
+            return;   
+        }
 
-            const auto roles{std::get<dpp::role_map>(cb.value)};
-            for(const auto& [k, role] : roles) {
-                if (is_my_role(bot, role)) {
-                    event.reply(reply_base + " <@&" + std::to_string(role.id) + ">");
-                    return;
-                }
-            }
+        const auto reply_ping {
+            role_result.is_error ? 
+            " No `" + api::names::role + "` role found, you can run `/" + api::route_here.route + "` to create it."
+            : " <@&" + role_result.get_result() + ">"
+        };
 
-            // no matching role
-            event.reply(reply_base + " No `" + api::names::role + "` found, you can run `/" + api::route_here.route + "` to create it.");
-        });
+        bot.execute_webhook(dpp::webhook(webhook_result.get_result()), reply_base + reply_ping);
     });
 }
 

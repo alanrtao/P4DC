@@ -32,6 +32,10 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
         if (webhook_it == webhooks.end()) {
             do_create_webhook(bot, channel, db);
         } else {
+            const auto wh = webhook_it->second;
+            db::upsert_webhook(
+                db, std::to_string(channel.id),
+                api::webhooks_root+std::to_string(wh.id)+"/"+wh.token);
             bot.message_create(dpp::message(channel.id, ":point_right: Webhook `" + api::names::webhook + "` already exists on this channel."));
         }
     });
@@ -50,7 +54,12 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
         if (role_it == roles.end()) {
             do_create_role(bot, guild, channel, user, db);
         } else {
+            const auto role = role_it->second;
             bot.message_create(dpp::message(channel.id, ":point_right: The `" + api::names::role + "` role already exists on this server."));
+            db::upsert_role(
+                db, std::to_string(guild.id),
+                std::to_string(role.id)
+            );
         }
     });
 }

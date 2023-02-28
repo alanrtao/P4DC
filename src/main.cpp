@@ -56,6 +56,7 @@ int main() {
         }
         slash_commands_inst.push_back(scmd_inst);
     }
+
     bot.on_ready([&bot, &slash_commands_inst](const dpp::ready_t& event) {
         if (dpp::run_once<struct register_bot_commands>()) {
             bot.global_bulk_command_create(slash_commands_inst);
@@ -67,10 +68,10 @@ int main() {
         api::pull_request
     };
 
-    bot.on_message_create([&bot, &msg_handlers](const dpp::message_create_t& event) {
+    bot.on_message_create([&bot, &msg_handlers, &db](const dpp::message_create_t& event) {
         for(const auto& handler : msg_handlers) {
             if (handler.trigger(event)) {
-                handler.handle(event, bot);
+                handler.handle(event, bot, db);
                 break;
             }
         }

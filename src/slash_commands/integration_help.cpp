@@ -56,7 +56,7 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
         bot.message_create(
             dpp::message(
                 channel.id,
-                "... proceeding with webhook `" + webhook_result.get_result() + "`"));
+                "... proceeding with webhook `" + api::names::webhook + "`"));
     }
 
     do_integration_help(
