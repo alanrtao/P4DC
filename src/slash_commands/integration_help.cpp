@@ -34,20 +34,18 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
 
     auto role_result = db::get_role(db, std::to_string(guild.id));
     if (role_result.is_error) {
+        bot.log(dpp::ll_error, role_result.error);
         bot.message_create(
-            dpp::message(
-                channel.id,
-                ":exclamation: Please run `" + api::route_here.route + "` first to create the `" + api::names::role + "` role."));
+            dpp::message(channel.id, ":exclamation: Please run `" + api::route_here.route + "` first to create the `" + api::names::role + "` role."));
         return;
     } else {
         bot.message_create(
-            dpp::message(
-                channel.id,
-                "... proceeding with role <@&" + role_result.get_result() + ">"));
+            dpp::message(channel.id, "... proceeding with role <@&" + role_result.value + ">"));
     }
 
     auto webhook_result = db::get_webhook(db, std::to_string(channel.id));
     if (webhook_result.is_error) {
+        bot.log(dpp::ll_error, webhook_result.error);
         bot.message_create(
             dpp::message(
                 channel.id,
@@ -59,10 +57,12 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
                 "... proceeding with webhook `" + api::names::webhook + "`"));
     }
 
+    bot.log(dpp::ll_error, "-- DB FETCH END --");
+
     do_integration_help(
         bot, hydratable::context {
-            { api::patterns::role, role_result.get_result() },
-            { api::patterns::webhook, webhook_result.get_result() },
+            { api::patterns::role, role_result.value },
+            { api::patterns::webhook, webhook_result.value },
             { api::patterns::depot, depot }
         },
         user);
@@ -70,6 +70,8 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
 
 void do_integration_help(dpp::cluster& bot, const hydratable::context& context, const dpp::user& user) {
     const auto& [fname, fcontent] = make_integration_file(context);
+
+    bot.log(dpp::ll_error, "-- MAKE INTEGRATION FILE END --");
 
     dpp::message reply {make_integration_instruction(context)};
     reply.add_file(fname, fcontent);

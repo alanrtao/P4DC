@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt -y install g++ cmake zlib1g-dev libarchive-dev libssl3 libsodium23 libopus0 sqlite3
+sudo apt -y install g++ cmake zlib1g-dev libarchive-dev libssl3 libsodium23 libopus0
 
 rm -rf DPP
 dpkg-deb -xv libdpp-10.0.22-linux-x64.deb DPP_

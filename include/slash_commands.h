@@ -11,7 +11,6 @@ namespace api {
 
     namespace slash_command_calls {
         void route_here_call(const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
-        void create_role_call(const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
         void integration_help_call(const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
         void build_pullrequest_format(const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
     }

@@ -40,10 +40,10 @@ void api::msg_handler_calls::pull_request_call (const dpp::message_create_t& eve
         const auto reply_ping {
             role_result.is_error ? 
             " No `" + api::names::role + "` role found, you can run `/" + api::route_here.route + "` to create it."
-            : " <@&" + role_result.get_result() + ">"
+            : " <@&" + role_result.value + ">"
         };
 
-        bot.execute_webhook(dpp::webhook(webhook_result.get_result()), reply_base + reply_ping);
+        bot.execute_webhook(dpp::webhook(webhook_result.value), reply_base + reply_ping);
     });
 }
 

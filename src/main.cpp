@@ -11,8 +11,6 @@
 
 #include "db_utils.h"
 
-const std::string db_file = "servers.db3";
-
 const uint64_t intent =
     dpp::i_default_intents
     | dpp::i_message_content;
@@ -21,14 +19,29 @@ int main() {
     dpp::cluster bot(BOT_TOKEN, intent);
     bot.on_log(dpp::utility::cout_logger());
 
-    SQLite::Database db(db_file, SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE );
-    db::make_webhooks_table(db);
-    db::make_roles_table(db);
+    SQLite::Database db(
+        db::filename,
+        SQLite::OPEN_CREATE 
+        | SQLite::OPEN_READWRITE
+        | SQLite::OPEN_FULLMUTEX // does not seem to work
+    );
+
+    const auto webhook_state = db::make_webhooks_table(db);
+
+    if (webhook_state.is_error) {
+        std::cout<<webhook_state.error<<std::endl;
+        return -1;
+    }
+    
+    const auto role_state = db::make_roles_table(db);
+    if (role_state.is_error) {
+        std::cout<<role_state.error<<std::endl;
+        return -1;
+    }
  
     // route incoming slash commands
     const std::vector<api::slash_command> slash_commands {
         api::route_here,
-        // api::create_role,
         api::integration_help
     };
 

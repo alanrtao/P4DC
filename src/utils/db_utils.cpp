@@ -1,99 +1,126 @@
 #include "db_utils.h"
 #include <exception>
 #include <iostream>
+#include <mutex>
 
-void db::make_roles_table (SQLite::Database &db) {
-    try {
-        db.exec (
-            "CREATE TABLE IF NOT EXISTS roles (\n"
-            "    id BLOB NOT NULL PRIMARY KEY,\n"
-            "    role BLOB NOT NULL\n"
-            ");\n"
-        );
-    } catch (const std::exception& e) {
-        std::cout<<e.what()<<std::endl;
-    }
-    
+// TODO: compile sql in threadsafe mode
+std::mutex db_mutex;
+
+db::result_t make_table(SQLite::Database& db, std::string spec);
+db::result_t edit(SQLite::Database& db, SQLite::Statement& query);
+db::result_t get_by_id (SQLite::Database& db, const std::string& table, const std::string& id);
+
+db::result_t db::make_roles_table (SQLite::Database &db) {
+    return make_table(
+        db,
+        "CREATE TABLE IF NOT EXISTS roles (\n"
+        "    id BLOB NOT NULL PRIMARY KEY,\n"
+        "    role BLOB NOT NULL"
+        ");");
 }
 
-void db::upsert_role (SQLite::Database& db, std::string id, std::string role) {
-    try {
-        db.exec (
-            "INSERT INTO roles(id, role) VALUES ('"+id+"', '"+role+"')\n"
-            "  ON CONFLICT(id) DO UPDATE SET role='"+role+"';\n"
-        );
-    } catch (const std::exception& e) {
-        std::cout<<e.what()<<std::endl;
-    }
-    
+db::result_t db::upsert_role (SQLite::Database& db, const std::string& id, const std::string& role) {
+    SQLite::Statement query { 
+        db,
+        "INSERT INTO roles(id, role) VALUES (?, ?)\n"
+        "  ON CONFLICT(id) DO UPDATE SET role=?;"
+    };
+    query.bind(1, id);
+    query.bind(2, role);
+    query.bind(3, role);
+
+    return edit(db, query);
 }
 
-void db::delete_role (SQLite::Database &db, std::string id)
+db::result_t db::delete_role (SQLite::Database &db, const std::string& id)
 {
-    try {
-        db.exec (
-            "DELETE FROM roles WHERE id='"+id+"';\n"  
-        );
-    } catch (const std::exception& e) {
-        std::cout<<e.what()<<std::endl;
-    }
+    SQLite::Statement query {
+        db,
+        "DELETE FROM roles WHERE id=?;"
+    };
+    query.bind(1, id);
+    
+    return edit(db, query);
 }
 
-db::result db::get_role (SQLite::Database &db, std::string id) {
-    try {
-        SQLite::Statement query(db, "SELECT * FROM roles WHERE id = '"+id+"' LIMIT 1;\n");
-        while(query.executeStep()) {
-            std::string role = query.getColumn(1);
-            return { role };
-        }
-    } catch (const std::exception& e) {
-        return { };
-    }
+db::result_t db::get_role (SQLite::Database &db, const std::string& id) {
+    return get_by_id(db, "roles", id);
 }
 
-void db::make_webhooks_table (SQLite::Database &db) {
-    try {
-        db.exec (
-            "CREATE TABLE IF NOT EXISTS webhooks (\n"
-            "    id BLOB NOT NULL PRIMARY KEY,\n"
-            "    url TEXT NOT NULL\n"
-            ");\n"
-        );
-    } catch (const std::exception& e) {
-        std::cout<<e.what()<<std::endl;
-    }
+db::result_t db::make_webhooks_table (SQLite::Database &db) {
+    return make_table(
+        db,
+        "CREATE TABLE IF NOT EXISTS webhooks (\n"
+        "    id BLOB NOT NULL PRIMARY KEY,\n"
+        "    url TEXT NOT NULL"
+        ");"
+    );
 }
 
-void db::upsert_webhook (SQLite::Database& db, std::string id, std::string url) {
-    try {
-        db.exec (
-            "INSERT INTO webhooks(id, url) VALUES ('"+id+"', '"+url+"')\n"
-            "  ON CONFLICT(id) DO UPDATE SET url='"+url+"';\n"
-        );
-    } catch (const std::exception& e) {
-        std::cout<<e.what()<<std::endl;
-    }
+db::result_t db::upsert_webhook (SQLite::Database& db, const std::string& id, const std::string& url) {
+    SQLite::Statement query {
+        db,
+        "INSERT INTO webhooks(id, url) VALUES (?, ?)\n"
+        "  ON CONFLICT(id) DO UPDATE SET url=?;"
+    };
+    query.bind(1, id);
+    query.bind(2, url);
+    query.bind(3, url);
+
+    return edit(db, query);
 }
 
-void db::delete_webhook (SQLite::Database &db, std::string id)
+db::result_t db::delete_webhook (SQLite::Database &db, const std::string& id)
 {
+    SQLite::Statement query {
+        db,
+        "DELETE FROM webhooks WHERE id=?;"
+    };
+    query.bind(1, id);
+
+    return edit(db, query);
+}
+
+db::result_t db::get_webhook (SQLite::Database &db, const std::string& id) {
+    return get_by_id(db, "webhooks", id);
+}
+
+db::result_t make_table(SQLite::Database& db, std::string spec) {
+    const std::lock_guard<std::mutex> lock(db_mutex);
     try {
-        db.exec (
-            "DELETE FROM webhooks WHERE id='"+id+"';\n"
-        );
+        SQLite::Transaction transaction(db);
+        db.exec (spec);
+        transaction.commit();
+
+        return db::result_t::make_result({});
     } catch (const std::exception& e) {
-        std::cout<<e.what()<<std::endl;
+        return db::result_t::make_error(e.what());
     }
 }
 
-db::result db::get_webhook (SQLite::Database &db, std::string id) {
+db::result_t edit(SQLite::Database& db, SQLite::Statement& query) {
+    const std::lock_guard<std::mutex> lock(db_mutex);
     try {
-        SQLite::Statement query(db, "SELECT * FROM webhooks WHERE id = '"+id+"' LIMIT 1;\n");
-        while(query.executeStep()) {
-            std::string url = query.getColumn(1);
-            return { url };
-        }
+        SQLite::Transaction transaction(db);
+        query.exec();
+        transaction.commit();
+        return db::result_t::make_result({});
     } catch (const std::exception& e) {
-        return {};
+        return db::result_t::make_error(e.what());
+    }
+}
+
+db::result_t get_by_id (SQLite::Database& db, const std::string& table, const std::string& id) {
+    const std::lock_guard<std::mutex> lock(db_mutex);
+    try {
+        SQLite::Statement query(db, "SELECT * FROM "+table+" WHERE id = ? LIMIT 1;");
+        query.bind(1, id);
+        while(query.executeStep()) {
+            std::string val = query.getColumn(1);
+            return db::result_t::make_result(val);
+        }
+        
+    } catch (const std::exception& e) {
+        return db::result_t::make_error(e.what());
     }
 }

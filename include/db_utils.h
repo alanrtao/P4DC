@@ -7,28 +7,42 @@
 
 namespace db {
 
+    const std::string filename = "p4dc.db3";
+
+    template <typename T>
     class result {
     public:
-        bool is_error;
+        const bool is_error;
+        const T value;
+        const std::string error;
+    
     private:
-        std::string value;
+        result(const bool& is_error, const T& value, const std::string& error) :
+            is_error{is_error},
+            value{value},
+            error{error}
+        {}
 
     public:
-        result() : is_error{true}, value{}{}
-        result(std::string value) : is_error{false}, value{value}{}
-
-        const std::string get_result() const { return value; }
+        static result make_result(const T& value) {
+            return { false, value, {} };
+        }
+        static result make_error(const std::string& error) {
+            return { true, {}, error };
+        }
     };
 
-    void make_webhooks_table(SQLite::Database& db);
-    void upsert_webhook(SQLite::Database& db, std::string id, std::string url);
-    void delete_webhook(SQLite::Database& db, std::string id);
-    result get_webhook(SQLite::Database& db, std::string id);
+    using result_t = result<std::string>;
 
-    void make_roles_table(SQLite::Database& db);
-    void upsert_role(SQLite::Database& db, std::string id, std::string role);
-    void delete_role(SQLite::Database& db, std::string id);
-    result get_role(SQLite::Database& db, std::string id);
+    result_t make_webhooks_table(SQLite::Database& db);
+    result_t upsert_webhook(SQLite::Database& db, const std::string& id, const std::string& url);
+    result_t delete_webhook(SQLite::Database& db, const std::string& id);
+    result_t get_webhook(SQLite::Database& db, const std::string& id);
+
+    result_t make_roles_table(SQLite::Database& db);
+    result_t upsert_role(SQLite::Database& db, const std::string& id, const std::string& role);
+    result_t delete_role(SQLite::Database& db, const std::string& id);
+    result_t get_role(SQLite::Database& db, const std::string& id);
 }
 
 #endif
