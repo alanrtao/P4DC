@@ -57,8 +57,6 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
                 "... proceeding with webhook `" + api::names::webhook + "`"));
     }
 
-    bot.log(dpp::ll_error, "-- DB FETCH END --");
-
     do_integration_help(
         bot, hydratable::context {
             { api::patterns::role, role_result.value },
@@ -70,8 +68,6 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
 
 void do_integration_help(dpp::cluster& bot, const hydratable::context& context, const dpp::user& user) {
     const auto& [fname, fcontent] = make_integration_file(context);
-
-    bot.log(dpp::ll_error, "-- MAKE INTEGRATION FILE END --");
 
     dpp::message reply {make_integration_instruction(context)};
     reply.add_file(fname, fcontent);
