@@ -16,10 +16,10 @@ file (COPY res/templates DESTINATION .)
 # Create an executable
 add_executable(${PROJECT_NAME}
     src/main.cpp
-    src/msg_handlers/pull_request.cpp
+    src/slash_commands/pull_request.cpp
     src/slash_commands/integration_help.cpp
     src/slash_commands/route_here.cpp
-    src/slash_commands/build_pullrequest_format.cpp
+    src/slash_commands/build_pr_format.cpp
     src/utils/hydratable.cpp
     src/utils/api_utils.cpp
     src/utils/db_utils.cpp

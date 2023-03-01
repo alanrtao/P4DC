@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <algorithm>
 
-#include "msg_handlers.h"
 #include "slash_commands.h"
 
 #include "env.h"
@@ -42,7 +41,8 @@ int main() {
     // route incoming slash commands
     const std::vector<api::slash_command> slash_commands {
         api::route_here,
-        api::integration_help
+        api::integration_help,
+        api::pull_request
     };
 
     std::unordered_map<std::string, api::slash_command> sc_map{};
@@ -55,38 +55,27 @@ int main() {
             command.call(event, bot, db);
         }
     });
- 
-    // register slash commands
-    std::vector<dpp::slashcommand> slash_commands_inst{};
-    for (const auto& scmd : slash_commands) {
-        dpp::slashcommand scmd_inst{
-            scmd.route,
-            scmd.description,
-            bot.me.id
-        };
-        for (const auto& opt : scmd.options) {
-            scmd_inst.add_option(opt);
-        }
-        slash_commands_inst.push_back(scmd_inst);
-    }
 
-    bot.on_ready([&bot, &slash_commands_inst](const dpp::ready_t& event) {
+    bot.on_ready([&bot, &slash_commands](const dpp::ready_t& event) {
         if (dpp::run_once<struct register_bot_commands>()) {
-            bot.global_bulk_command_create(slash_commands_inst);
-        }
-    });
-
-    // message handlers
-    const std::vector<api::msg_handler> msg_handlers {
-        api::pull_request
-    };
-
-    bot.on_message_create([&bot, &msg_handlers, &db](const dpp::message_create_t& event) {
-        for(const auto& handler : msg_handlers) {
-            if (handler.trigger(event)) {
-                handler.handle(event, bot, db);
-                break;
+            // register slash commands
+            std::vector<dpp::slashcommand> global_commands_inst{};
+            for (const auto& scmd : slash_commands) {
+                dpp::slashcommand scmd_inst {
+                    scmd.route,
+                    scmd.description,
+                    bot.me.id
+                };
+                for (const auto& opt : scmd.options) {
+                    scmd_inst.add_option(opt.make_option());
+                }
+                global_commands_inst.push_back(scmd_inst);
             }
+            bot.global_bulk_command_create(global_commands_inst, [](const auto& event) {
+                if (event.is_error()) {
+                    std::cout<<event.get_error().message<<std::endl;
+                }
+            });
         }
     });
  

@@ -61,6 +61,7 @@ void api::slash_command_calls::integration_help_call (const dpp::slashcommand_t&
         bot, hydratable::context {
             { api::patterns::role, role_result.value },
             { api::patterns::webhook, webhook_result.value },
+            { api::patterns::webhook_user, api::names::webhook_user },
             { api::patterns::depot, depot }
         },
         user);
@@ -102,13 +103,15 @@ const std::pair<std::string, std::string> make_integration_file(const hydratable
     commit_trigger = hydratable::make_hydratable (
         api::paths::commit_trigger,
         {
-            api::patterns::webhook
+            api::patterns::webhook,
+            api::patterns::webhook_user,
         }
     ),
     branch_trigger = hydratable::make_hydratable (
         api::paths::branch_trigger,
         {
             api::patterns::webhook,
+            api::patterns::webhook_user,
             api::patterns::role
         }
     );

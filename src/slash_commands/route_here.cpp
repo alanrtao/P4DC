@@ -11,15 +11,20 @@ void api::slash_command_calls::route_here_call (const dpp::slashcommand_t& event
     const auto user { event.command.get_issuing_user() };
 
     if (!is_admin(bot, event)) {
-        event.reply(":exclamation: Sensitive webhook information disclosed, only server admins can run this command.");
+        event.reply(
+            dpp::message(":exclamation: Sensitive webhook information disclosed, only server admins can run this command.")
+            .set_flags(dpp::m_ephemeral));
         return;
     }
 
     event.reply(
-        ":anchor: P4DC routed to "+channel.name+"  \n"
-        "**... creating webhook `" + api::names::webhook + "` for this channel**\n"
-        "**... creating role `" + api::names::role + "` for this channel**\n"
-        "... if you do not receive confirmations for both, run this command again.");
+            dpp::message(
+                ":anchor: P4DC routed to "+channel.name+"  \n"
+                "**... creating webhook `" + api::names::webhook + "` for this channel**\n"
+                "**... creating role `" + api::names::role + "` for this channel**\n"
+                "... if you do not receive confirmations for both, run this command again."
+            )
+            .set_flags(dpp::m_ephemeral));
 
     bot.get_channel_webhooks(channel.id, [&bot, channel, &db](const auto& cb) {
         if (cb.is_error()) {

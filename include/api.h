@@ -27,7 +27,8 @@ namespace api {
         const std::string
             depot = "__depot__",
             webhook = "__webhook__",
-            role = "__role__";
+            role = "__role__",
+            webhook_user = "__webhook_user__";
     }
 }
 

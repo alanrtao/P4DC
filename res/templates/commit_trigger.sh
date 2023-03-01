@@ -33,6 +33,6 @@ msg+="$( \
         -e 's/\$//g' | \
     sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' \
     )"
-json="{\"username\":\"P4DC Buddy\",\"content\":\"$msg\"}"
+json="{\"username\":\"__webhook_user__\",\"content\":\"$msg\"}"
 webhook_call "$json"
 exit 0
