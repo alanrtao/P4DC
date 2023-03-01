@@ -3,7 +3,7 @@
 sudo apt -y install g++ cmake zlib1g-dev libarchive-dev libssl3 libsodium23 libopus0
 
 rm -rf DPP
-dpkg-deb -xv libdpp-10.0.22-linux-x64.deb DPP_
+dpkg-deb -xv libdpp-10.0.23-linux-x64.deb DPP_
 mv DPP_/usr DPP
 rm -rf DPP_
 
