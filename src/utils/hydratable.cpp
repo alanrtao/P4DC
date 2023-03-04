@@ -2,7 +2,7 @@
 #include <string_view>
 #include <fstream>
 #include <iostream>
-#include "text_utils.h"
+#include "utils/text_utils.h"
 
 const hydratable hydratable::make_hydratable(const std::string& fname, const std::unordered_set<std::string>& patterns) {
     using path = std::filesystem::path;

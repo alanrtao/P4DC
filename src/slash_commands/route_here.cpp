@@ -1,7 +1,7 @@
 #include "api.h"
 #include "slash_commands.h"
-#include "api_utils.h"
-#include "db_utils.h"
+#include "utils/api_utils.h"
+#include "utils/db_utils.h"
 
 // note: application_id no longer set. bot only reacts to non-bot messages
 

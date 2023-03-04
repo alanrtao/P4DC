@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME}
     src/utils/api_utils.cpp
     src/utils/db_utils.cpp
     src/utils/text_utils.cpp
+    src/utils/modal_utils.cpp
 )
  
 # Linking libraries

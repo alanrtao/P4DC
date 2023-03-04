@@ -8,9 +8,7 @@
 #include "slash_commands.h"
 #include "modals.h"
 #include "env.h"
-#include "db_utils.h"
-
-#include "text_utils.h"
+#include "utils/db_utils.h"
 
 const uint64_t intent =
     dpp::i_default_intents
@@ -48,6 +46,7 @@ int main() {
     std::unordered_map<std::string, api::slash_command> sc_map{};
     for(const auto& sc : slash_commands) sc_map.insert({ sc.route, sc });
 
+    // chat commands
     bot.on_slashcommand([&bot, &sc_map, &db](const dpp::slashcommand_t& event) {
         const auto cmd{ event.command.get_command_name() };
         if (const auto& query{ sc_map.find(cmd) }; query != sc_map.end()) {
@@ -59,6 +58,7 @@ int main() {
         } 
     });
 
+    // message contexts
     bot.on_message_context_menu([&bot, &sc_map, &db](const dpp::message_context_menu_t& event) {
         const auto cmd { event.command.get_command_name() };
         if (const auto& query { sc_map.find(cmd) }; query != sc_map.end()) {
@@ -76,6 +76,7 @@ int main() {
     std::unordered_map<std::string, api::modal> mo_map {};
     for (const auto &mo : modals) { mo_map.insert({mo.route, mo}); }
 
+    // modal handlers
     bot.on_form_submit([&bot, &mo_map, &db](const dpp::form_submit_t& event) {
         const auto modal { event.custom_id };
         if (const auto& query { mo_map.find(modal) }; query != mo_map.end()) {
@@ -84,6 +85,7 @@ int main() {
         }
     });
 
+    // on start
     bot.on_ready([&bot, &slash_commands](const dpp::ready_t& event) {
         if (dpp::run_once<struct register_bot_commands>()) {
             // register slash commands

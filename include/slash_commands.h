@@ -80,7 +80,7 @@ namespace api {
 
         build_pr_format {
             "build_pr_format",
-            "Build a pull request form for filling out",
+            "Edit the default PR content for channel. HTML comments are permitted but will be omitted on PR submission.",
             api::slash_command_calls::build_pr_format_call,
             {}
         },

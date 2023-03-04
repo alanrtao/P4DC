@@ -1,7 +1,7 @@
 #include "api.h"
 #include "slash_commands.h"
-#include "api_utils.h"
-#include "db_utils.h"
+#include "utils/api_utils.h"
+#include "utils/db_utils.h"
 #include <archive.h>
 #include <archive_entry.h>
 

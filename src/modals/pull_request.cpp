@@ -1,5 +1,5 @@
 #include "modals.h"
-#include "text_utils.h"
+#include "utils/text_utils.h"
 
 void api::modals::pull_request_modal (const dpp::form_submit_t& event, dpp::cluster& bot, SQLite::Database& db) {
     event.reply(text::remove_xml_comments("remove <!--test--> comment"));
