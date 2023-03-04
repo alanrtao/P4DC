@@ -8,12 +8,13 @@
 
 namespace api {
     using slash_command_t = std::function<void(const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db)>;
+    using message_context_menu_t = std::function<void(const dpp::message_context_menu_t event, dpp::cluster& bot, SQLite::Database& db)>;
 
     namespace slash_command_calls {
         void route_here_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
         void integration_help_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
         void build_pr_format_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
-        void pull_request_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
+        void pull_request_call (const dpp::message_context_menu_t event, dpp::cluster& bot, SQLite::Database& db);
     }
 
     struct slash_command_option {
@@ -37,22 +38,21 @@ namespace api {
         const std::string description;
         const api::slash_command_t call;
         const std::vector<slash_command_option> options;
+        const api::message_context_menu_t call_msg_ctxt;
         const bool is_context;
 
-        slash_command(
+        slash_command (
             const std::string& route,
             const std::string& description,
             const api::slash_command_t& call,
             const std::vector<slash_command_option>& options
             ) : route{route}, description{description}, call{call}, options{options}, is_context{false} {}
 
-        slash_command(
+        slash_command (
             const std::string& route,
             const std::string& description,
-            const api::slash_command_t& call,
-            const std::vector<slash_command_option>& options,
-            const bool is_context
-            ) : route{route}, description{description}, call{call}, options{options}, is_context{is_context} {}
+            const api::message_context_menu_t& call_msg_ctxt
+        ) : route{route}, description{description}, call_msg_ctxt{call_msg_ctxt}, options{}, is_context{true} {}
     };
 
     const slash_command
@@ -88,9 +88,7 @@ namespace api {
         pull_request(
             "pull_request",
             "Convert a message to a Pull Request thread. Message must come from " + api::names::webhook_user + ".",
-            api::slash_command_calls::pull_request_call,
-            {},
-            true
+            api::slash_command_calls::pull_request_call
         );
 }
 

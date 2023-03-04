@@ -1,3 +1,10 @@
+#include "modals.h"
+#include "xml_utils.h"
+
+void api::modals::pull_request_modal (const dpp::form_submit_t& event, dpp::cluster& bot, SQLite::Database& db) {
+    event.reply(xml::remove_xml_comments("remove <!--test--> comment"));
+}
+
 // #include "api.h"
 // #include "slash_commands.h"
 // #include "api_utils.h"

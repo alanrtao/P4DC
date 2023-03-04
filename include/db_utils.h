@@ -30,6 +30,9 @@ namespace db {
         static result make_error(const std::string& error) {
             return { true, {}, error };
         }
+        const T get_or_default(const T& default_val) const {
+            return is_error ? default_val : value;
+        }
     };
 
     using result_t = result<std::string>;
@@ -43,6 +46,11 @@ namespace db {
     result_t upsert_role(SQLite::Database& db, const std::string& id, const std::string& role);
     result_t delete_role(SQLite::Database& db, const std::string& id);
     result_t get_role(SQLite::Database& db, const std::string& id);
+    
+    result_t make_pr_formats_table(SQLite::Database& db);
+    result_t upsert_pr_format(SQLite::Database& db, const std::string& id, const std::string& content);
+    result_t delete_pr_format(SQLite::Database& db, const std::string& id);
+    result_t get_pr_format(SQLite::Database& db, const std::string& id);
 }
 
 #endif

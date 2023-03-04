@@ -9,6 +9,7 @@ add_library(dpp SHARED IMPORTED)
 set_property(TARGET dpp PROPERTY
     IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/libs/DPP/lib/libdpp.so
 )
+find_package(LibXml2 REQUIRED)
 find_package(LibArchive REQUIRED)
 configure_file (env.h.in env.h @ONLY)
 file (COPY res/templates DESTINATION .)
@@ -16,18 +17,24 @@ file (COPY res/templates DESTINATION .)
 # Create an executable
 add_executable(${PROJECT_NAME}
     src/main.cpp
+
     src/slash_commands/pull_request.cpp
     src/slash_commands/integration_help.cpp
     src/slash_commands/route_here.cpp
     src/slash_commands/build_pr_format.cpp
+
+    src/modals/pull_request.cpp
+
     src/utils/hydratable.cpp
     src/utils/api_utils.cpp
     src/utils/db_utils.cpp
+    src/utils/xml_utils.cpp
 )
  
 # Linking libraries
 target_link_libraries(${PROJECT_NAME}
     LibArchive::LibArchive
+    LibXml2::LibXml2
     dpp
     SQLiteCpp
     sqlite3
