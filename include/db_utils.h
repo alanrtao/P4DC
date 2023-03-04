@@ -30,9 +30,6 @@ namespace db {
         static result make_error(const std::string& error) {
             return { true, {}, error };
         }
-        const T get_or_default(const T& default_val) const {
-            return is_error ? default_val : value;
-        }
     };
 
     using result_t = result<std::string>;
