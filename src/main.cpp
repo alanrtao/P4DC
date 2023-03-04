@@ -10,6 +10,8 @@
 #include "env.h"
 #include "db_utils.h"
 
+#include "text_utils.h"
+
 const uint64_t intent =
     dpp::i_default_intents
     | dpp::i_message_content;
@@ -74,10 +76,12 @@ int main() {
     std::unordered_map<std::string, api::modal> mo_map {};
     for (const auto &mo : modals) { mo_map.insert({mo.route, mo}); }
 
-    bot.on_form_submit([&bot, &db](const dpp::form_submit_t& event) {
-        bot.log(dpp::ll_warning, event.command.get_command_name());
-        bot.log(dpp::ll_warning, event.custom_id);
-        bot.log(dpp::ll_warning, std::get<std::string>(event.components[0].components[0].value));
+    bot.on_form_submit([&bot, &mo_map, &db](const dpp::form_submit_t& event) {
+        const auto modal { event.custom_id };
+        if (const auto& query { mo_map.find(modal) }; query != mo_map.end()) {
+            const auto [name, modal_call] = *query;
+            modal_call.call(event, bot, db);
+        }
     });
 
     bot.on_ready([&bot, &slash_commands](const dpp::ready_t& event) {

@@ -2,6 +2,7 @@
 #include <string_view>
 #include <fstream>
 #include <iostream>
+#include "text_utils.h"
 
 const hydratable hydratable::make_hydratable(const std::string& fname, const std::unordered_set<std::string>& patterns) {
     using path = std::filesystem::path;
@@ -20,23 +21,7 @@ const std::string hydratable::hydrate(const hydratable::context& context) const 
         if (pattern.length() == 0 || patterns.find(pattern) == patterns.end()) {
             continue;
         }
-
-        // replace all
-        std::string swap{};
-        swap.reserve(raw.size() * 2);
-
-        std::string_view remain { current };
-        auto p = remain.find(pattern);
-        while (p != remain.npos) {
-            swap.insert(swap.end(), remain.begin(), remain.begin() + p); // add up to first occurrence
-            swap.insert(swap.end(), value.begin(), value.end()); // add value
-
-            remain = std::string_view(remain.begin() + p + pattern.length());
-            p = remain.find(pattern);
-        }
-        swap.insert(swap.end(), remain.begin(), remain.end());
-
-        current = swap;
+        current = text::replace_all(current, pattern, value);
     }
 
     return current;

@@ -3,14 +3,17 @@ cmake_minimum_required(VERSION 3.22)
 # Project name, version and description
 project(p4dc VERSION 0.1 DESCRIPTION "P4DC bot by Alan Tao")
 
-# add_subdirectory(libs/DPP)
+set (ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DBUILD_TESTING:BOOL=OFF")
+
 add_subdirectory(libs/SQLiteCpp)
+add_subdirectory(libs/Re2)
 add_library(dpp SHARED IMPORTED)
 set_property(TARGET dpp PROPERTY
     IMPORTED_LOCATION ${CMAKE_CURRENT_LIST_DIR}/libs/DPP/lib/libdpp.so
 )
-find_package(LibXml2 REQUIRED)
+
 find_package(LibArchive REQUIRED)
+
 configure_file (env.h.in env.h @ONLY)
 file (COPY res/templates DESTINATION .)
 
@@ -28,15 +31,15 @@ add_executable(${PROJECT_NAME}
     src/utils/hydratable.cpp
     src/utils/api_utils.cpp
     src/utils/db_utils.cpp
-    src/utils/xml_utils.cpp
+    src/utils/text_utils.cpp
 )
  
 # Linking libraries
 target_link_libraries(${PROJECT_NAME}
     LibArchive::LibArchive
-    LibXml2::LibXml2
     dpp
     SQLiteCpp
+    re2::re2
     sqlite3
     pthread
     dl
