@@ -5,7 +5,7 @@
 #include "utils/db_utils.h"
 
 void api::modals::pull_request_modal (const dpp::form_submit_t& event, dpp::cluster& bot, SQLite::Database& db) {
-    const auto pr_label = event.components[0].components[0].label;
+    const auto pr_label = event.components[0].components[0].custom_id;
     const auto msg_id = dpp::snowflake (modal_utils::unpack_pr_modal_label(pr_label));
     const auto channel_id = event.command.channel_id;
     const auto guild_id = event.command.guild_id;
