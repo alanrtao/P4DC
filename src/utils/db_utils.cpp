@@ -161,7 +161,7 @@ db::result_t get_by_id (SQLite::Database& db, const std::string& table, const st
             std::string val = query.getColumn(1);
             return db::result_t::make_result(val);
         }
-        
+        return db::result_t::make_error("Not found");
     } catch (const std::exception& e) {
         return db::result_t::make_error(e.what());
     }
