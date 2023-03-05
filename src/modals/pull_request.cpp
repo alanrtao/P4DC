@@ -16,7 +16,7 @@ void api::modals::pull_request_modal (const dpp::form_submit_t& event, dpp::clus
     const uint16_t archive_duration = 1440;
 
     bot.message_get(msg_id, channel_id, 
-        [&bot, event, &db, guild_id, channel_id, msg_id, &pr_title, &pr_content, archive_duration]
+        [&bot, event, &db, guild_id, channel_id, msg_id, pr_title, pr_content, archive_duration]
         (const auto &cb){
         if (cb.is_error()) {
             event.reply(dpp::message("PR does not reference valid message").set_flags(dpp::m_ephemeral));
@@ -28,9 +28,8 @@ void api::modals::pull_request_modal (const dpp::form_submit_t& event, dpp::clus
             return;
         }
 
-        event.reply(dpp::message("Creating PR thread...").set_flags(dpp::m_ephemeral));
-        bot.thread_create_with_message("PR: " + pr_title, channel_id, msg.id, archive_duration, 0, 
-            [&bot, event, &db, &pr_title, &pr_content, guild_id, channel_id]
+        bot.thread_create_with_message("PR: " + pr_title, channel_id, msg_id, archive_duration, 0, 
+            [&bot, event, &db, pr_title, pr_content, guild_id, channel_id]
             (const auto &cb) {
             if (cb.is_error()) {
                 event.reply(dpp::message(":exclamation: Thread could not be created").set_flags(dpp::m_ephemeral));
@@ -49,13 +48,15 @@ void api::modals::pull_request_modal (const dpp::form_submit_t& event, dpp::clus
                 return;   
             }
 
+            event.reply(dpp::message("Creating PR thread...").set_flags(dpp::m_ephemeral));
+
             const auto reply_ping {
                 role_result.is_error ? 
                 "> No `" + api::names::role + "` role found, you can run `/" + api::route_here.route + "` to create it.\n"
                 : " <@&" + role_result.value + ">\n"
             };
 
-            bot.execute_webhook(dpp::webhook(webhook_result.value), reply_ping + "\n" + pr_content);
+            bot.execute_webhook(dpp::webhook(webhook_result.value), dpp::message(reply_ping + "\n" + pr_content), false, thread.id);
         });
     });
 }

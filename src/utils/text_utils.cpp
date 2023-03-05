@@ -20,7 +20,7 @@ const std::string text::replace_all (const std::string& src, const std::string& 
     return temp;
 }
 
-const std::string comment_re = "<!--([\\s\\S]*?)-->";
+const re2::RE2 comment_re ("<!--([\\s\\S]*?)-->");
 
 const std::string text::remove_xml_comments (const std::string& src) {
     std::string temp { src };
