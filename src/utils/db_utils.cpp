@@ -85,25 +85,25 @@ db::result_t db::get_webhook (SQLite::Database &db, const std::string& id) {
     return get_by_id(db, "webhooks", id);
 }
 
-db::result_t db::make_pr_formats_table(SQLite::Database& db) {
+db::result_t db::make_pr_defaults_table (SQLite::Database& db) {
     return make_table(
         db,
-        "CREATE TABLE IF NOT EXISTS formats (\n"
+        "CREATE TABLE IF NOT EXISTS defaults (\n"
         "    id BLOB NOT NULL PRIMARY KEY,\n"
         "    content TEXT NOT NULL"
         ");"
     );
 }
 
-db::result_t db::upsert_pr_format(SQLite::Database& db, const std::string& id, const std::string& content) {
+db::result_t db::upsert_pr_defaults (SQLite::Database& db, const std::string& id, const std::string& content) {
 
     if (content.length() > 500) {
-        return db::result_t::make_error("Pull quest format longer than 500 characters.");
+        return db::result_t::make_error("Pull quest default content longer than 500 characters.");
     }
 
     SQLite::Statement query {
         db,
-        "INSERT INTO formats(id, content) VALUES (?, ?)\n"
+        "INSERT INTO defaults(id, content) VALUES (?, ?)\n"
         "  ON CONFLICT(id) DO UPDATE SET content=?;"
     };
     query.bind(1, id);
@@ -113,21 +113,21 @@ db::result_t db::upsert_pr_format(SQLite::Database& db, const std::string& id, c
     return edit(db, query);
 }
 
-db::result_t db::delete_pr_format(SQLite::Database& db, const std::string& id) {
+db::result_t db::delete_pr_defaults (SQLite::Database& db, const std::string& id) {
     SQLite::Statement query {
         db,
-        "DELETE FROM formats WHERE id=?;"
+        "DELETE FROM defaults WHERE id=?;"
     };
     query.bind(1, id);
 
     return edit(db, query);
 }
 
-db::result_t db::get_pr_format(SQLite::Database& db, const std::string& id) {
-    return get_by_id(db, "formats", id);
+db::result_t db::get_pr_defaults (SQLite::Database& db, const std::string& id) {
+    return get_by_id(db, "defaults", id);
 }
 
-db::result_t make_table(SQLite::Database& db, std::string spec) {
+db::result_t make_table (SQLite::Database& db, std::string spec) {
     const std::lock_guard<std::mutex> lock(db_mutex);
     try {
         SQLite::Transaction transaction(db);
@@ -140,7 +140,7 @@ db::result_t make_table(SQLite::Database& db, std::string spec) {
     }
 }
 
-db::result_t edit(SQLite::Database& db, SQLite::Statement& query) {
+db::result_t edit (SQLite::Database& db, SQLite::Statement& query) {
     const std::lock_guard<std::mutex> lock(db_mutex);
     try {
         SQLite::Transaction transaction(db);

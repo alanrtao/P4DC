@@ -24,9 +24,10 @@ add_executable(${PROJECT_NAME}
     src/slash_commands/pull_request.cpp
     src/slash_commands/integration_help.cpp
     src/slash_commands/route_here.cpp
-    src/slash_commands/build_pr_format.cpp
+    src/slash_commands/set_pr_defaults.cpp
 
     src/modals/pull_request.cpp
+    src/modals/pull_request_defaults.cpp
 
     src/utils/hydratable.cpp
     src/utils/api_utils.cpp

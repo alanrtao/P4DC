@@ -4,12 +4,16 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <dpp/dpp.h>
 #include <functional>
+#include <string>
 
 namespace api {
     using modal_t = std::function<void(const dpp::form_submit_t& event, dpp::cluster& bot, SQLite::Database& db)>;
 
     namespace modals {
+        const std::string pull_request = "p4dc_pr";
+        const std::string pull_request_defaults = "p4dc_pr_defaults";
         void pull_request_modal (const dpp::form_submit_t& event, dpp::cluster& bot, SQLite::Database& db);
+        void pull_request_defaults_modal (const dpp::form_submit_t& event, dpp::cluster& bot, SQLite::Database& db);
     }
 
     class modal {
@@ -23,9 +27,13 @@ namespace api {
 
     const modal
         submit_pull_request (
-            "submit_pull_request", api::modals::pull_request_modal
+            api::modals::pull_request,
+            api::modals::pull_request_modal
+        ),
+        pull_request_defaults (
+            api::modals::pull_request_defaults,
+            api::modals::pull_request_defaults_modal
         );
-
 }
 
 #endif

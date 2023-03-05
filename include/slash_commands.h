@@ -3,6 +3,7 @@
 
 #include "api.h"
 #include <vector>
+#include <exception>
 #include <dpp/dpp.h>
 #include <SQLiteCpp/SQLiteCpp.h>
 
@@ -13,7 +14,7 @@ namespace api {
     namespace slash_command_calls {
         void route_here_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
         void integration_help_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
-        void build_pr_format_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
+        void set_pr_defaults_call (const dpp::slashcommand_t& event, dpp::cluster& bot, SQLite::Database& db);
         void pull_request_call (const dpp::message_context_menu_t event, dpp::cluster& bot, SQLite::Database& db);
     }
 
@@ -46,13 +47,17 @@ namespace api {
             const std::string& description,
             const api::slash_command_t& call,
             const std::vector<slash_command_option>& options
-            ) : route{route}, description{description}, call{call}, options{options}, is_context{false} {}
+            ) : route{route}, description{description}, call{call}, options{options}, is_context{false} {
+                if (description.length() > 100) throw ("Description too long for slash command " + route);
+            }
 
         slash_command (
             const std::string& route,
             const std::string& description,
             const api::message_context_menu_t& call_msg_ctxt
-        ) : route{route}, description{description}, call_msg_ctxt{call_msg_ctxt}, options{}, is_context{true} {}
+        ) : route{route}, description{description}, call_msg_ctxt{call_msg_ctxt}, options{}, is_context{true} {
+            if (description.length() > 100) throw ("Description too long for slash command " + route);
+        }
     };
 
     const slash_command
@@ -78,10 +83,10 @@ namespace api {
             }
         },
 
-        build_pr_format {
-            "build_pr_format",
-            "Edit the default PR content for channel. HTML comments are permitted but will be omitted on PR submission.",
-            api::slash_command_calls::build_pr_format_call,
+        set_pr_defaults {
+            "set_pr_defaults",
+            "Edit the default PR content for channel. HTML comments will be omitted on actual PR submission.",
+            api::slash_command_calls::set_pr_defaults_call,
             {}
         },
 

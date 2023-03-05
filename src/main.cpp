@@ -27,7 +27,7 @@ int main() {
 
     // make database tables
     using make_table_t = std::function<db::result_t(SQLite::Database&)>;
-    std::vector<make_table_t> make_table_calls { db::make_webhooks_table, db::make_roles_table, db::make_pr_formats_table};
+    std::vector<make_table_t> make_table_calls { db::make_webhooks_table, db::make_roles_table, db::make_pr_defaults_table };
     for(const auto make_table : make_table_calls) {
         const auto status = make_table(db);
         if (status.is_error) {
@@ -40,7 +40,8 @@ int main() {
     const std::vector<api::slash_command> slash_commands {
         api::route_here,
         api::integration_help,
-        api::pull_request
+        api::pull_request,
+        api::set_pr_defaults
     };
 
     std::unordered_map<std::string, api::slash_command> sc_map{};
@@ -71,10 +72,13 @@ int main() {
     });
 
     const std::vector<api::modal> modals {
-        api::submit_pull_request
+        api::submit_pull_request,
+        api::pull_request_defaults
     };
     std::unordered_map<std::string, api::modal> mo_map {};
-    for (const auto &mo : modals) { mo_map.insert({mo.route, mo}); }
+    for (const auto &mo : modals) { 
+        mo_map.insert({mo.route, mo});
+    }
 
     // modal handlers
     bot.on_form_submit([&bot, &mo_map, &db](const dpp::form_submit_t& event) {
@@ -102,9 +106,11 @@ int main() {
                     scmd_inst.set_type(dpp::ctxm_message);
                 global_commands_inst.push_back(scmd_inst);
             }
-            bot.global_bulk_command_create(global_commands_inst, [](const auto& event) {
-                if (event.is_error())
-                    std::cout<<event.get_error().message<<std::endl;
+            bot.global_bulk_command_create(global_commands_inst, [&bot](const auto& event) {
+                if (event.is_error()) {
+                    bot.log(dpp::ll_critical, event.get_error().message);
+                    abort();
+                }
             });
         }
     });

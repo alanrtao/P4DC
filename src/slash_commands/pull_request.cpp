@@ -1,4 +1,5 @@
 #include "api.h"
+#include "modals.h"
 #include "slash_commands.h"
 #include "utils/api_utils.h"
 #include "utils/db_utils.h"
@@ -24,17 +25,14 @@ void api::slash_command_calls::pull_request_call (const dpp::message_context_men
         return;
     }
 
-    const auto format = db::get_pr_format(db, channel_id_str);
+    const auto defaults = db::get_pr_defaults(db, channel_id_str);
 
-    dpp::interaction_modal_response modal ("p4dc_pr", "Pull Request");
+    dpp::interaction_modal_response modal (api::modals::pull_request, "Pull Request");
 
     modal
-    .add_component(modal::make_pr_title_field())
+    .add_component(modal_utils::make_pr_title_field(msg_id_str))
     .add_row()
-    .add_component(modal::make_pr_channel_id_field(channel_id_str))
-    .add_component(modal::make_pr_msg_id_field(msg_id_str))
-    .add_row()
-    .add_component(modal::make_pr_content_field(format.is_error ? "" : format.value));
+    .add_component(modal_utils::make_pr_content_field(defaults.is_error ? "" : defaults.value));
 
     event.dialog(modal);
 }

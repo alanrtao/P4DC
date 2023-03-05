@@ -1,8 +1,63 @@
 #include "modals.h"
+#include "slash_commands.h"
+#include "utils/modal_utils.h"
 #include "utils/text_utils.h"
+#include "utils/db_utils.h"
 
 void api::modals::pull_request_modal (const dpp::form_submit_t& event, dpp::cluster& bot, SQLite::Database& db) {
-    event.reply(text::remove_xml_comments("remove <!--test--> comment"));
+    const auto pr_label = event.components[0].components[0].label;
+    const auto msg_id = dpp::snowflake (modal_utils::unpack_pr_modal_label(pr_label));
+    const auto channel_id = event.command.channel_id;
+    const auto guild_id = event.command.guild_id;
+
+    const auto pr_title = std::get<std::string>(event.components[0].components[0].value);
+    const auto pr_content = text::remove_xml_comments(std::get<std::string>(event.components[1].components[0].value));
+
+    const uint16_t archive_duration = 1440;
+
+    bot.message_get(msg_id, channel_id, 
+        [&bot, event, &db, guild_id, channel_id, msg_id, &pr_title, &pr_content, archive_duration]
+        (const auto &cb){
+        if (cb.is_error()) {
+            event.reply(dpp::message("PR does not reference valid message").set_flags(dpp::m_ephemeral));
+            return;
+        }
+        const auto msg = std::get<dpp::message>(cb.value);
+        if (msg.has_thread()) {
+            event.reply(dpp::message("Commit already has thread attached.").set_flags(dpp::m_ephemeral));
+            return;
+        }
+
+        event.reply(dpp::message("Creating PR thread...").set_flags(dpp::m_ephemeral));
+        bot.thread_create_with_message("PR: " + pr_title, channel_id, msg.id, archive_duration, 0, 
+            [&bot, event, &db, &pr_title, &pr_content, guild_id, channel_id]
+            (const auto &cb) {
+            if (cb.is_error()) {
+                event.reply(dpp::message(":exclamation: Thread could not be created").set_flags(dpp::m_ephemeral));
+                return;
+            }
+
+            auto thread = std::get<dpp::thread>(cb.value);
+            
+            auto role_result = db::get_role(db, std::to_string(guild_id));
+            auto webhook_result = db::get_webhook(db, std::to_string(channel_id));
+            
+            if (webhook_result.is_error) {
+                event.reply(
+                    dpp::message(" No `" + api::names::webhook + "` webhook found, you can run `/" + api::route_here.route + "` to create it.")
+                    .set_flags(dpp::m_ephemeral));
+                return;   
+            }
+
+            const auto reply_ping {
+                role_result.is_error ? 
+                "> No `" + api::names::role + "` role found, you can run `/" + api::route_here.route + "` to create it.\n"
+                : " <@&" + role_result.value + ">\n"
+            };
+
+            bot.execute_webhook(dpp::webhook(webhook_result.value), reply_ping + "\n" + pr_content);
+        });
+    });
 }
 
 // #include "api.h"

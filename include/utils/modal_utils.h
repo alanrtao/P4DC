@@ -3,10 +3,10 @@
 
 #include <dpp/dpp.h>
 
-namespace modal {
-    dpp::component make_pr_title_field();
-    dpp::component make_pr_channel_id_field(const std::string& channel_id_str);
-    dpp::component make_pr_msg_id_field(const std::string& msg_id_str);
+namespace modal_utils {
+    const std::string make_pr_modal_label(const std::string& msg_id);
+    const std::string unpack_pr_modal_label(const std::string& modal_label);
+    dpp::component make_pr_title_field(const std::string& msg_id);
     dpp::component make_pr_content_field(const std::string& default_val);
 }
 

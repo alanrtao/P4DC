@@ -11,8 +11,7 @@ namespace api {
         const std::string
             role = "P4DCReviewer",
             webhook = "P4DCHook",
-            webhook_user = "P4DC Buddy",
-            pull_request_mark = "#PR";
+            webhook_user = "P4DC Buddy";
     }
 
     namespace paths {
