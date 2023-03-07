@@ -5,7 +5,7 @@
 - Relevant commit messages can be marked as **pull requests**
   - You can change default pull request contents per channel
 
-[](/res/flow.png)
+[](res/preview/flow.png)
 
 ## Setup
 - Invite the bot to your server using [this link](https://discord.com/api/oauth2/authorize?client_id=1067966552068079616&permissions=312190471168&scope=bot)
