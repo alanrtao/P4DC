@@ -1,34 +1,37 @@
 # P4DC
-## What?
-- P4DC is a Discord integration for Perforce. It generates Bash scripts based on information you provide, which can be used as [triggers](https://www.perforce.com/manuals/p4sag/Content/P4SAG/chapter.scripting.triggers.html)
-- You can view commit messages in designated channels
-  ![preview webhook](res/preview/webhook.png)
-- You can create threads by including `#PR` in your [changelist description](https://www.perforce.com/manuals/p4v/Content/P4V/files.submit.html#Submit_changelists). The thread's name can be specified after `#PR`
-  ![preview pull_request](res/preview/pull_request.png)
-## How?
-- The bot consists of two commands, `route_here` and `integration_help`
-- `route_here` sets up
-  - A [webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) that allows Perforce triggers to communicate with the channel
-  - A reviewer role that you can assign to members of your server
-  ![preview route_here](res/preview/route_here.png)
-  
-- `integration_help`
-  - Sends you a compressed archive containing relevant Bash scripts
-    - *Caution: these scripts include information regarding your Discord channel's webhook, which may be used by others to send spam to that channel. Please do not share the files with people you do not trust.*
-    - *Caution: these scripts are meant to be run on the machine that hosts your Perforce server. They come with no warranty against side effects or unintended consequences, please beware and: 1) inspect the scripts before use; 2) only choose scripts you need; 3) inform the owner of that machine if it is not you*.
-  - Generates instructions to set up the Perforce server and the machine that hosts it, including the creation of relevant **user groups** and **login tickets**
-    - *Caution: please be sure to check against your organization's policies on security and privacy when following these steps*
-    - You will encounter steps that *require* ownership of the machine hosting the Perforce server. In such case, please contact the owner to complete these steps instead of working around them.
-  - If you do not trust such a method, feel free to fill out the [Bash scripts](res/templates) with your variables
-    - You are required to create a separate webhook as P4DC's webhook might not have a visible URL
-    - P4DC will check that the sending user is named "P4DC Buddy". Please ensure this is kept in your edited scripts.
+- P4DC integrates Perforce servers running on Linux with your Discord server
+  - One channel can be dedicated to one repository, there can be multiple P4DC-binded channels in one server
+  - Communication happens via [triggers](https://www.perforce.com/manuals/p4sag/Content/P4SAG/chapter.scripting.html) from Perforce to Discord, and never the other way around
+- Relevant commit messages can be marked as **pull requests**
+  - You can change default pull request contents per channel
 
-## Where?
+[](/res/flow.png)
+
+## Setup
 - Invite the bot to your server using [this link](https://discord.com/api/oauth2/authorize?client_id=1067966552068079616&permissions=312190471168&scope=bot)
-- View additional Perforce articles at [my website](https://alanrtao.com/#perforce)
-
-## Who?
-- P4DC is developed by Alan Tao independent from Perforce Helix Core
+- Your server must use a [ticket-based](https://www.perforce.com/manuals/p4sag/Content/P4SAG/superuser.basic.auth.tickets.html) login policy
+  - Official document describing how to change security level [here](https://www.perforce.com/manuals/v20.1/p4sag/Content/P4SAG/security-levels.html)
+  - There must be a valid ticket at `/opt/perforce/p4dc_ticket`, otherwise an error will show on trigger that describes how to create that ticket
+- Your own computer must be able to extract `.tar.gz` archives (on Linux this can be done with `tar`, on Windows WinRAR supports the format)
+  
+## Commands
+- `/route_here`: create a `P4DCReviewer` role that will be pinged on pull requests, as well as a `P4DCHook` webhook
+  - *CAUTION: This webhook is currently stored as plain text on P4DC's server*
+- `integration_help <depot name>`: generate trigger scripts and installation instructions
+  - If your depot is directly under your server root address (*ex.* `//MyDepot/`), just fill in the depot's name (*ex.* `/integration_help MyDepot`)
+  - If your depot is under some hierarchy, then fill in all the *middle* slashes (*ex.* for `//CompanyA/MyGame` do `/integration_help CompanyA/MyGame`)
+- `set_pr_defaults`: set default contents that will show up when someone tries to make a pull request in your channel
+  - You can add HTML comments that will disappear in the actual pull request just like on Github
+  - *ex.*
+    ```
+    Related Task:
+    <!--tag the Trello card here-->
+    ```
+    - If the pull requester does not delete the comment manually, it will be automatically deleted by P4DC
+    
+## Pull Requesting
+- For commit messages from `P4DC Buddy`, you can right click the message and select `Apps/pull_request` to make a pull request
+- P4DC will create a thread with the appropriate title and ping everyone with the `P4DCReviewer` role
 
 # Building the Bot Yourself
 ## Setup
@@ -43,3 +46,6 @@
 - The bot must also have relevant `intent` set for reading message content (*this is only for examining the content of messages from webhooks created by the bot itself*)
 - Make sure you filled the environment variables with your bot (see `env.h.template`)
 - Build and run `./p4dc` under the `build` folder
+
+## Info
+- P4DC is developed by [Alan Tao](https://alanrtao.com) independent from Perforce Helix Core
