@@ -94,8 +94,8 @@ const std::string make_integration_instruction(const hydratable::context& contex
         "----**To install**----\n"
         "  1. Extract the compressed archive inside your depot, placing all `.sh` files in a folder named `p4dc-triggers` directly under the workspace folder.\n"
         "  2. Mark the `p4dc-triggers` folder for add and submit changes.\n"
-        "  3. Run `p4 triggers`, a text editor should open showing a list of triggers currently configured in your server.\n"
-        " Paste the following snippet into it and save. (If you are not a server admin, let your server admin complete this step)\n";
+        "  3. Run `p4 triggers`, a text editor should open showing a list of triggers currently configured in your server."
+        " Paste the following snippet into it and save, replace `main` with your branch name if needed.\n";
     return preemble + "```" + integration_instructions.hydrate(context) + "```";
 }
 
