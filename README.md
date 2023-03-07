@@ -35,9 +35,10 @@
 
 # Building the Bot Yourself
 ## Setup
-- [DPP dependency](https://dpp.dev/buildcmake.html)
-- Install dependencies (in the libs folder there is a `clone.sh` script to run, you can also just clone the DPP repository under `libs`)
-- `mkdir -p build && cd build`
+- [DPP dependency](https://dpp.dev/)
+- Install dependencies
+  - In the libs folder there is a `clone.sh` script to run for convenience
+- Create the build folder with `mkdir -p build && cd build`
 - Install CMake and do `cmake ..`, `cmake --build .`
 
 ## Running
