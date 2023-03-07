@@ -1,1 +1,1 @@
-__depot__-commit-trigger-p4dc change-commit //__depot__/... "%//__depot__/p4dc-triggers/commit_trigger.sh% %change% %client% %user%"
+	__depot__-commit-trigger-p4dc change-commit //__depot__/... "%//__depot__/p4dc-triggers/commit_trigger.sh% %change% %client% %user%"
