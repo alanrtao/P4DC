@@ -86,14 +86,16 @@ const std::string make_integration_instruction(const hydratable::context& contex
     );
 
     const std::string preemble =
+        "----**Caution**----\n"
         "*This is a reply from your `" + api::integration_help.route + "` call"
         " containing code generated for your depot `" + context.at(api::patterns::depot) + "`*.\n"
         "Please **inspect** the code before running integration steps below, as P4DC does not guarantee them to be side-effect free.\n"
         "Please also **notify** your server admin that you are running generated code on their server.\n"
-        "To install..."
-        "\n  1. Extract the compressed archive inside your depot and submit changes."
-        "  2. Run `p4 triggers`, a text editor should open showing a list of triggers currently configured in your server."
-        " Paste the following snippet into it and save. (If you are not a server admin, let your server admin complete this step)";
+        "----**To install**----\n"
+        "  1. Extract the compressed archive inside your depot, placing all `.sh` files in a folder named `p4dc-triggers` directly under the workspace folder.\n"
+        "  2. Mark the `p4dc-triggers` folder for add and submit changes.\n"
+        "  3. Run `p4 triggers`, a text editor should open showing a list of triggers currently configured in your server.\n"
+        " Paste the following snippet into it and save. (If you are not a server admin, let your server admin complete this step)\n";
     return preemble + "```" + integration_instructions.hydrate(context) + "```";
 }
 
