@@ -124,7 +124,7 @@ void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel, SQLite::
                 bot.message_create(dpp::message(wh.channel_id, ":exclamation: Webhook created but could not be updated to the database, deleting..."));
                 bot.delete_webhook(wh.id);
             } else {
-                bot.message_create(dpp::message(wh.channel_id, ":link: Webhook `" + api::names::webhook + "` created in channel " + std::to_string(wh.channel_id)));
+                bot.message_create(dpp::message(wh.channel_id, ":link: Webhook `" + api::names::webhook + "` created."));
             }
         }
     });
