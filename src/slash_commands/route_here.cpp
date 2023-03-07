@@ -124,7 +124,7 @@ void do_create_webhook (dpp::cluster& bot, const dpp::channel& channel, SQLite::
                 bot.message_create(dpp::message(wh.channel_id, ":exclamation: Webhook created but could not be updated to the database, deleting..."));
                 bot.delete_webhook(wh.id);
             } else {
-                bot.message_create(dpp::message(wh.channel_id, ":link: Webhook `" + api::names::webhook + "` created."));
+                bot.message_create(dpp::message(wh.channel_id, ":link: Webhook `" + api::names::webhook + "` created in channel " + std::to_string(wh.channel_id)));
             }
         }
     });
@@ -175,13 +175,14 @@ dpp::role make_role (const dpp::guild& guild) {
 }
 
 void do_create_role (dpp::cluster& bot, const dpp::guild& guild, const dpp::channel& channel, const dpp::user& user, SQLite::Database& db) {
-    bot.role_create(make_role(guild), [&bot, &guild, &channel, &user, &db](const auto& cb) {
+    const auto guild_id = std::to_string(guild.id);
+    bot.role_create(make_role(guild), [&bot, &guild, guild_id, &channel, &user, &db](const auto& cb) {
         if (cb.is_error()) {
             bot.log(dpp::loglevel::ll_error, cb.get_error().message);
             bot.message_create(dpp::message(channel.id, ":exclamation: Role `" + api::names::role + "` could not be created."));
         } else {
             dpp::role role{std::get<dpp::role>(cb.value)};
-            const auto status = db::upsert_role(db, std::to_string(role.guild_id), std::to_string(role.id));
+            const auto status = db::upsert_role(db, guild_id, std::to_string(role.id));
 
             if (status.is_error) {
                 bot.log(dpp::ll_error, status.error);

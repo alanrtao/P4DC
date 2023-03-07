@@ -117,7 +117,7 @@ const std::pair<std::string, std::string> make_integration_file(const hydratable
     );
     static std::vector<hydratable> files { 
         commit_trigger,
-        branch_trigger
+        // branch_trigger
     };
 
     const auto depot = context.at(api::patterns::depot);
